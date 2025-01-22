@@ -43,7 +43,7 @@ jobs:
         uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ secrets.DCD_API_KEY }}
-          app-file: ./binaries/samples.apk
+          app-file: ./binaries/sample.apk
           flows: ./flows/ios-flow.yaml
           maestro-version: ${{ matrix.maestro-version }}
           name: "Android - Maestro ${{ matrix.maestro-version }} Test Run"
