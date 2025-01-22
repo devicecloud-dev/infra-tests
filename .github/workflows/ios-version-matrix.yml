@@ -28,8 +28,8 @@ jobs:
         uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ secrets.DCD_API_KEY }}
-          app-file: binaries/sample.zip
-          workspace: ../flows/ios-flow.yaml
+          app-file: ./binaries/sample.zip
+          workspace: ./flows/ios-flow.yaml
           ios-device: iPhone-16
           ios-version: ${{ matrix.ios-version }}
           name: "iOS ${{ matrix.ios-version }} - iPhone 16 Test Run"
