@@ -30,6 +30,6 @@ jobs:
           api-key: ${{ secrets.DCD_API_KEY }}
           app-file: ./binaries/sample.zip
           workspace: ./flows/ios-flow.yaml
-          ios-device: iPhone-16
+          ios-device: iphone-16
           ios-version: ${{ matrix.ios-version }}
           name: "iOS ${{ matrix.ios-version }} - iPhone 16 Test Run"
