@@ -1,0 +1,39 @@
+name: Test Android API Levels
+
+on:
+  # Run at 2 AM UTC daily
+  schedule:
+    - cron: "0 2 * * *"
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test-android-apis:
+    name: Android API ${{ matrix.api-level }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Don't cancel all jobs if one fails
+      fail-fast: false
+      matrix:
+        api-level:
+          - "29" # Android 10
+          - "30" # Android 11
+          - "31" # Android 12
+          - "32" # Android 12L
+          - "33" # Android 13
+          - "34" # Android 14
+          - "35" # Android 15
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Android API Tests
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ secrets.DCD_API_KEY }}
+          app-file: binaries/samples.apk
+          flows: flows/android-flow.yaml
+          android-device: pixel-6
+          android-api-level: ${{ matrix.api-level }}
+          name: "Android API ${{ matrix.api-level }} - Pixel 6 Test Run"
