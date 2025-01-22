@@ -33,7 +33,7 @@ jobs:
         with:
           api-key: ${{ secrets.DCD_API_KEY }}
           app-file: binaries/samples.apk
-          workspace: ../android-flow.yaml
+          workspace: ../flows/android-flow.yaml
           android-device: pixel-6
           android-api-level: ${{ matrix.api-level }}
           name: "Android API ${{ matrix.api-level }} - Pixel 6 Test Run"

@@ -84,6 +84,6 @@ jobs:
         with:
           api-key: ${{ secrets.DCD_API_KEY }}
           app-file: binaries/sample.zip
-          workspace: ../ios-flow.yaml
+          workspace: ../flows/ios-flow.yaml
           maestro-version: ${{ matrix.maestro-version }}
           name: "iOS - Maestro ${{ matrix.maestro-version }} Test Run"
