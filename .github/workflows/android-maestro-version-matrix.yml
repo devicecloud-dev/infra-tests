@@ -1,4 +1,4 @@
-name: Test Multiple Maestro Versions - Android and iOS
+name: Test Multiple Maestro Versions on Android
 
 on:
   # Run at 4 AM UTC daily
