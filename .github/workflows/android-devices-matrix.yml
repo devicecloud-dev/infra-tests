@@ -42,14 +42,6 @@ jobs:
           - device: pixel-6
             api-level: "35"
 
-          # Pixel 6a supports API 33-35
-          - device: pixel-6a
-            api-level: "33"
-          - device: pixel-6a
-            api-level: "34"
-          - device: pixel-6a
-            api-level: "35"
-
           # Pixel 6 Pro supports API 33-35
           - device: pixel-6-pro
             api-level: "33"
