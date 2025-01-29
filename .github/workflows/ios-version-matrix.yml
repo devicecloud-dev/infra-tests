@@ -6,6 +6,15 @@ on:
     - cron: "0 1 * * *"
   # Allow manual triggering
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
 
 jobs:
   test-ios-versions:
@@ -27,7 +36,8 @@ jobs:
       - name: Run iOS Version Tests
         uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
-          api-key: ${{ secrets.DCD_API_KEY }}
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
           app-file: ./binaries/sample.zip
           workspace: ./flows/ios-flow.yaml
           ios-device: iphone-14
