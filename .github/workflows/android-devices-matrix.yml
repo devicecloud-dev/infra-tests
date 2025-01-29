@@ -1,0 +1,97 @@
+name: Test Android Devices
+
+on:
+  # Run at 2 AM UTC daily
+  schedule:
+    - cron: "0 2 * * *"
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
+
+jobs:
+  test-android-devices:
+    name: ${{ matrix.device }} - API ${{ matrix.api-level }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Don't cancel all jobs if one fails
+      fail-fast: false
+      matrix:
+        include:
+          # Pixel 6 supports API 29-35
+          - device: pixel-6
+            api-level: "29"
+          - device: pixel-6
+            api-level: "30"
+          - device: pixel-6
+            api-level: "31"
+          - device: pixel-6
+            api-level: "32"
+          - device: pixel-6
+            api-level: "33"
+          - device: pixel-6
+            api-level: "34"
+          - device: pixel-6
+            api-level: "35"
+
+          # Pixel 6a supports API 33-35
+          - device: pixel-6a
+            api-level: "33"
+          - device: pixel-6a
+            api-level: "34"
+          - device: pixel-6a
+            api-level: "35"
+
+          # Pixel 6 Pro supports API 33-35
+          - device: pixel-6-pro
+            api-level: "33"
+          - device: pixel-6-pro
+            api-level: "34"
+          - device: pixel-6-pro
+            api-level: "35"
+
+          # Pixel 7 supports API 33-35
+          - device: pixel-7
+            api-level: "33"
+          - device: pixel-7
+            api-level: "34"
+          - device: pixel-7
+            api-level: "35"
+
+          # Pixel 7 Pro supports API 33-35
+          - device: pixel-7-pro
+            api-level: "33"
+          - device: pixel-7-pro
+            api-level: "34"
+          - device: pixel-7-pro
+            api-level: "35"
+
+          # Generic Tablet supports API 33-35
+          - device: generic-tablet
+            api-level: "33"
+          - device: generic-tablet
+            api-level: "34"
+          - device: generic-tablet
+            api-level: "35"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Android Device Tests
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow.yaml
+          android-device: ${{ matrix.device }}
+          android-api-level: ${{ matrix.api-level }}
+          name: "${{ matrix.device }} - Android API ${{ matrix.api-level }} Test Run"

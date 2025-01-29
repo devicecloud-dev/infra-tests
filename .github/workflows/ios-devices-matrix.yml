@@ -1,0 +1,112 @@
+name: Test iOS Devices
+
+on:
+  # Run at 1 AM UTC daily
+  schedule:
+    - cron: "0 1 * * *"
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
+
+jobs:
+  test-ios-devices:
+    name: ${{ matrix.device }} - iOS ${{ matrix.ios-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Don't cancel all jobs if one fails
+      fail-fast: false
+      matrix:
+        include:
+          # iPhone 14 series (iOS 16-18)
+          - device: iphone-14
+            ios-version: "16"
+          - device: iphone-14
+            ios-version: "17"
+          - device: iphone-14
+            ios-version: "18"
+          
+          - device: iphone-14-plus
+            ios-version: "16"
+          - device: iphone-14-plus
+            ios-version: "17"
+          - device: iphone-14-plus
+            ios-version: "18"
+          
+          - device: iphone-14-pro
+            ios-version: "16"
+          - device: iphone-14-pro
+            ios-version: "17"
+          - device: iphone-14-pro
+            ios-version: "18"
+          
+          - device: iphone-14-pro-max
+            ios-version: "16"
+          - device: iphone-14-pro-max
+            ios-version: "17"
+          - device: iphone-14-pro-max
+            ios-version: "18"
+          
+          # iPhone 15 series (iOS 17-18)
+          - device: iphone-15
+            ios-version: "17"
+          - device: iphone-15
+            ios-version: "18"
+          
+          - device: iphone-15-plus
+            ios-version: "17"
+          - device: iphone-15-plus
+            ios-version: "18"
+          
+          - device: iphone-15-pro
+            ios-version: "17"
+          - device: iphone-15-pro
+            ios-version: "18"
+          
+          - device: iphone-15-pro-max
+            ios-version: "17"
+          - device: iphone-15-pro-max
+            ios-version: "18"
+          
+          # iPhone 16 series (iOS 18 only)
+          - device: iphone-16
+            ios-version: "18"
+          
+          - device: iphone-16-plus
+            ios-version: "18"
+          
+          - device: iphone-16-pro
+            ios-version: "18"
+          
+          - device: iphone-16-pro-max
+            ios-version: "18"
+          
+          # iPad Pro (iOS 16-18)
+          - device: ipad-pro-6th-gen
+            ios-version: "16"
+          - device: ipad-pro-6th-gen
+            ios-version: "17"
+          - device: ipad-pro-6th-gen
+            ios-version: "18"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run iOS Device Tests
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.zip
+          workspace: ./flows/ios-flow.yaml
+          ios-device: ${{ matrix.device }}
+          ios-version: ${{ matrix.ios-version }}
+          name: "${{ matrix.device }} - iOS ${{ matrix.ios-version }} Test Run"
