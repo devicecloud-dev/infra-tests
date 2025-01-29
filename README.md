@@ -2,7 +2,7 @@
 
 A suite of automated tests that runs nightly to verify that DeviceCloud is working as expected.
 
-## Android
+## Android
 
 [![Test Multiple Maestro Versions on Android](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-maestro-version-matrix.yml/badge.svg)](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-maestro-version-matrix.yml)
 
