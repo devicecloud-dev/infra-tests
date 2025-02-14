@@ -3,3 +3,6 @@ appId: com.android.chrome
 - launchApp
 - waitForAnimationToEnd
 - assertVisible: ".*web address.*"
+- tapOn:
+    text: "Got it"
+    optional: true
