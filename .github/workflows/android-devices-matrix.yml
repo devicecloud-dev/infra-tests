@@ -42,6 +42,14 @@ jobs:
           - device: pixel-6
             api-level: "35"
 
+          # Google Play versions of Pixel 6
+          - device: pixel-6
+            api-level: "34"
+            google-play: true
+          - device: pixel-6
+            api-level: "35"
+            google-play: true
+
           # Pixel 6 Pro supports API 33-35
           - device: pixel-6-pro
             api-level: "33"
@@ -57,6 +65,14 @@ jobs:
             api-level: "34"
           - device: pixel-7
             api-level: "35"
+
+          # Google Play versions of Pixel 7
+          - device: pixel-7
+            api-level: "34"
+            google-play: true
+          - device: pixel-7
+            api-level: "35"
+            google-play: true
 
           # Pixel 7 Pro supports API 33-35
           - device: pixel-7-pro
@@ -74,6 +90,14 @@ jobs:
           - device: generic-tablet
             api-level: "35"
 
+          # Google Play versions of Generic Tablet
+          - device: generic-tablet
+            api-level: "34"
+            google-play: true
+          - device: generic-tablet
+            api-level: "35"
+            google-play: true
+
     steps:
       - uses: actions/checkout@v3
 
@@ -86,4 +110,5 @@ jobs:
           workspace: ./flows/android-flow.yaml
           android-device: ${{ matrix.device }}
           android-api-level: ${{ matrix.api-level }}
-          name: "${{ matrix.device }} - Android API ${{ matrix.api-level }} Test Run"
+          google-play: ${{ matrix.google-play || '' }}
+          name: "${{ matrix.device }} - Android API ${{ matrix.api-level }}${{ matrix.google-play && ' with Play' || '' }} Test Run"
