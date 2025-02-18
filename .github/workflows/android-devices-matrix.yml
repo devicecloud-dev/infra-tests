@@ -82,6 +82,14 @@ jobs:
           - device: pixel-7-pro
             api-level: "35"
 
+          # Google Play versions of Pixel 7 Pro
+          - device: pixel-7-pro
+            api-level: "34"
+            google-play: true
+          - device: pixel-7-pro
+            api-level: "35"
+            google-play: true
+          
           # Generic Tablet supports API 33-35
           - device: generic-tablet
             api-level: "33"

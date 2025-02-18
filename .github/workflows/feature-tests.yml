@@ -1,0 +1,46 @@
+name: Test Feature Flags
+
+on:
+  # Run at 5 AM UTC daily
+  schedule:
+    - cron: "0 5 * * *"
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
+
+jobs:
+  test-feature-flags:
+    name: Run Feature Flags Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Android Locale Test
+        continue-on-error: true
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow-german.yaml
+          device-locale: "de_DE"
+          name: Run Android Locale Test
+
+      - name: Run iOS Locale Test
+        continue-on-error: true
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.ipa
+          workspace: ./flows/ios-flow-german.yaml
+          device-locale: "de_DE"
+          name: Run iOS Locale Test
