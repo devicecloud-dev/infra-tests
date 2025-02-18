@@ -1,4 +1,4 @@
 appId: org.wikimedia.wikipedia
 ---
 - launchApp
-- assertViewHasText: "The Free.*"
+- assertVisible: "The Free.*"

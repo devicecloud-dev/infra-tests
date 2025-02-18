@@ -1,4 +1,4 @@
 appId: org.wikipedia
 ---
 - launchApp
-- assertViewHasText: "Die freie.*"
+- assertVisible: "Die freie.*"
