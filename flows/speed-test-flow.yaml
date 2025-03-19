@@ -1,0 +1,5 @@
+appId: com.android.chrome
+---
+- openLink: "https://fast.com/"
+- waitForAnimationToEnd
+- assertVisible: "Your Internet speed is"
