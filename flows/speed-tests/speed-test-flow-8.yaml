@@ -2,4 +2,7 @@ appId: com.android.chrome
 ---
 - openLink: "https://fast.com/"
 - waitForAnimationToEnd
-- openLink: "https://theguardian.com"
+- tapOn:
+    point: 50%,50%
+- waitForAnimationToEnd
+- assertNotVisible: ".*not reach out servers.*"
