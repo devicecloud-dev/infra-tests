@@ -2,8 +2,8 @@ name: Test Android Devices
 
 on:
   # Run at 2 AM UTC daily
-  schedule:
-    - cron: "0 2 * * *"
+  # schedule:
+  #   - cron: "0 2 * * *"
   # Allow manual triggering
   workflow_dispatch:
     inputs:
