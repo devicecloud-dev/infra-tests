@@ -43,7 +43,7 @@ jobs:
           app-file: ./binaries/sample.apk
           workspace: ./flows/android-flow.yaml
           name: Run Json File Flag Test
-          json-flag: true
+          json-file: true
 
       - name: Run Android Locale Test
         continue-on-error: true
