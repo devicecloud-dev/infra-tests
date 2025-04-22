@@ -45,6 +45,10 @@ jobs:
           name: Run Json File Flag Test
           json-file: true
 
+      - name: Extract and Log Console URL
+        run: |
+          jq -r '.consoleUrl' '/home/runner/work/infra-tests/infra-tests/Run Json File Flag Test_dcd.json'
+
       - name: Run Android Locale Test
         continue-on-error: true
         uses: devicecloud-dev/device-cloud-for-maestro@v1
