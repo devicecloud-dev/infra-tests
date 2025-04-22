@@ -44,3 +44,14 @@ jobs:
           workspace: ./flows/ios-flow-german.yaml
           device-locale: "de_DE"
           name: Run iOS Locale Test
+
+      - name: Run json-file Test
+        continue-on-error: true
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow.yaml
+          name: Run Json File Flag Test
+          json-flag: true
