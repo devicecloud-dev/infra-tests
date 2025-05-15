@@ -27,4 +27,5 @@ jobs:
           app-file: ./binaries/sample.apk
           workspace: ./flows/onboard-chrome
           android-device: pixel-6
+          skip-chrome-onboarding: true
           name: "Android Onboard Chrome"
