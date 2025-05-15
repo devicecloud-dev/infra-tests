@@ -1,0 +1,32 @@
+appId: com.android.chrome
+---
+- waitForAnimationToEnd
+- launchApp
+- waitForAnimationToEnd
+- tapOn:
+    text: 'Accept & continue'
+    optional: true
+- waitForAnimationToEnd
+- tapOn:
+    text: 'Use without an account'
+    optional: true
+- waitForAnimationToEnd
+- tapOn:
+    text: 'No thanks'
+    optional: true
+- waitForAnimationToEnd
+- tapOn:
+    text: 'No thanks'
+    optional: true
+- waitForAnimationToEnd
+- tapOn:
+    text: 'Got it'
+    optional: true
+- stopApp
+- waitForAnimationToEnd
+- launchApp
+- waitForAnimationToEnd
+- tapOn:
+    text: 'Got it'
+    optional: true
+- stopApp

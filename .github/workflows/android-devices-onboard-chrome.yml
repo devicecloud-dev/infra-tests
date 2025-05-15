@@ -1,0 +1,30 @@
+name: Android Onboard Chrome
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
+
+jobs:
+  test-android-devices:
+    name: Android Onboard Chrome
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Android Device Tests
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.zip
+          workspace: ./flows/onboard-chrome
+          android-device: pixel-6
+          name: "Android Onboard Chrome"
