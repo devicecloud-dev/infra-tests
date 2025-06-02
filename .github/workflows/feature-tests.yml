@@ -119,7 +119,7 @@ jobs:
           app-file: ./binaries/sample.apk
           workspace: ./flows/android-flow.yaml
           additional-app-binary-ids: |
-            90dda1a7-366a-4573-915a-c5818a1f1206
+            ${{ github.event.inputs.environment == 'dev' && '6a958ab7-b028-4f33-9cb2-1e1063dea9a9' || '90dda1a7-366a-4573-915a-c5818a1f1206' }}
           name: Run Android Additional App Binary IDs Test
 
       - name: Run iOS Additional App Binary IDs Test
@@ -130,7 +130,7 @@ jobs:
           app-file: ./binaries/sample.zip
           workspace: ./flows/ios-flow.yaml
           additional-app-binary-ids: |
-            7e155646-d554-497e-a53b-87d8f0f198e9
+            ${{ github.event.inputs.environment == 'dev' && '6953f2ed-a26e-43aa-9cd4-af5ad84c377e' || '7e155646-d554-497e-a53b-87d8f0f198e9' }}
           name: Run iOS Additional App Binary IDs Test
 
       - name: Run Android Environment Variables Test
