@@ -95,7 +95,7 @@ jobs:
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
           app-file: ./binaries/sample.apk
           workspace: ./flows/android-flow.yaml
-          download-artifacts: FAILED
+          download-artifacts: ALL
           name: Run Download Artifacts Test
 
       - name: Assert Download Artifacts ZIP File
