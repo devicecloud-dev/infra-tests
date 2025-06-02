@@ -110,3 +110,47 @@ jobs:
             ls -la
             exit 1
           fi
+
+      - name: Run Android Additional App Binary IDs Test
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow.yaml
+          additional-app-binary-ids: |
+            90dda1a7-366a-4573-915a-c5818a1f1206
+          name: Run Android Additional App Binary IDs Test
+
+      - name: Run iOS Additional App Binary IDs Test
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.zip
+          workspace: ./flows/ios-flow.yaml
+          additional-app-binary-ids: |
+            7e155646-d554-497e-a53b-87d8f0f198e9
+          name: Run iOS Additional App Binary IDs Test
+
+      - name: Run Android Environment Variables Test
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow-env.yaml
+          env: |
+            BUNDLEID=org.wikipedia
+          name: Run Android Environment Variables Test
+
+      - name: Run iOS Environment Variables Test
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.zip
+          workspace: ./flows/ios-flow-env.yaml
+          env: |
+            BUNDLEID=org.wikimedia.wikipedia
+          name: Run iOS Environment Variables Test

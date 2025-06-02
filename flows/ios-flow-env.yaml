@@ -1,0 +1,4 @@
+appId: ${BUNDLEID}
+---
+- launchApp
+- assertVisible: "The Free.*"
