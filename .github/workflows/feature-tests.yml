@@ -24,7 +24,6 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Run Async Test
-        continue-on-error: true
         uses: devicecloud-dev/device-cloud-for-maestro@v1.3.6
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
@@ -35,7 +34,6 @@ jobs:
           async: true
 
       - name: Run json-file Test
-        continue-on-error: true
         uses: devicecloud-dev/device-cloud-for-maestro@v1.3.6
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
@@ -61,7 +59,6 @@ jobs:
           name: Run Android Locale Test
 
       - name: Run iOS Locale Test
-        continue-on-error: true
         uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
@@ -72,7 +69,6 @@ jobs:
           name: Run iOS Locale Test
 
       - name: Run iOS M4 Runner Type Test
-        continue-on-error: true
         uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
@@ -83,7 +79,6 @@ jobs:
           name: Run iOS M4 Runner Type Test
 
       - name: Run Android Orientation Test
-        continue-on-error: true
         uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
@@ -94,7 +89,6 @@ jobs:
           name: Run Android Orientation Test
 
       - name: Run Download Artifacts Test
-        continue-on-error: true
         uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
