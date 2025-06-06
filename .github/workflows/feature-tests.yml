@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Run Async Test
-        uses: devicecloud-dev/device-cloud-for-maestro@v1.3.6
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
@@ -34,7 +34,7 @@ jobs:
           async: true
 
       - name: Run json-file Test
-        uses: devicecloud-dev/device-cloud-for-maestro@v1.3.6
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
