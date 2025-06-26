@@ -68,15 +68,15 @@ jobs:
           device-locale: "de_DE"
           name: Run iOS Locale Test
 
-      # - name: Run iOS M4 Runner Type Test
-      #   uses: devicecloud-dev/device-cloud-for-maestro@v1
-      #   with:
-      #     api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
-      #     api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
-      #     app-file: ./binaries/sample.zip
-      #     workspace: ./flows/ios-flow.yaml
-      #     runner-type: m4
-      #     name: Run iOS M4 Runner Type Test
+      - name: Run iOS M4 Runner Type Test
+        uses: devicecloud-dev/device-cloud-for-maestro@v1
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.zip
+          workspace: ./flows/ios-flow.yaml
+          runner-type: m4
+          name: Run iOS M4 Runner Type Test
 
       - name: Run Android Orientation Test
         uses: devicecloud-dev/device-cloud-for-maestro@v1
