@@ -1,0 +1,14 @@
+appId: org.wikipedia
+---
+- swipe:
+    direction: 'UP'
+- tapOn:
+    text: 'Camera'
+- tapOn:
+    id: 'com.android.camera2:id/confirm_button'
+- tapOn:
+    id: 'com.android.permissioncontroller:id/permission_allow_foreground_only_button'
+- tapOn:
+    id: 'com.android.camera2:id/three_dots'
+- tapOn:
+    id: 'com.android.camera2:id/camera_toggle_button'
