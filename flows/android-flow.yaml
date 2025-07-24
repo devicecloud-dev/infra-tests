@@ -2,3 +2,12 @@ appId: org.wikipedia
 ---
 - launchApp
 - assertVisible: "The Free.*"
+- tapOn: "Skip"
+- tapOn: "Search Wikipedia"
+- inputText: "Bristol"
+- tapOn: "City and county in England"
+- scrollUntilVisible:
+    element: ".*13th.*"
+    direction: "down"
+    speed: 80
+    timeout: 30000
