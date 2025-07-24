@@ -2,7 +2,9 @@ appId: org.wikimedia.wikipedia
 ---
 - launchApp
 - assertVisible: "The Free.*"
+- waitForAnimationToEnd
 - tapOn: "Skip"
+- waitForAnimationToEnd
 - tapOn: "Search Wikipedia"
 - inputText: "Bristol"
 - tapOn: "City and county in England"
