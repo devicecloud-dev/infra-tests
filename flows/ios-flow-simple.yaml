@@ -1,0 +1,5 @@
+appId: org.wikimedia.wikipedia
+---
+- launchApp
+- assertVisible: "The Free.*"
+
