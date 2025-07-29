@@ -34,25 +34,11 @@ jobs:
           - device: iphone-14
             ios-version: "18"
           
-          - device: iphone-14-plus
-            ios-version: "16"
-          - device: iphone-14-plus
-            ios-version: "17"
-          - device: iphone-14-plus
-            ios-version: "18"
-          
           - device: iphone-14-pro
             ios-version: "16"
           - device: iphone-14-pro
             ios-version: "17"
           - device: iphone-14-pro
-            ios-version: "18"
-          
-          - device: iphone-14-pro-max
-            ios-version: "16"
-          - device: iphone-14-pro-max
-            ios-version: "17"
-          - device: iphone-14-pro-max
             ios-version: "18"
           
           # iPhone 15 series (iOS 17-18)
@@ -61,19 +47,9 @@ jobs:
           - device: iphone-15
             ios-version: "18"
           
-          - device: iphone-15-plus
-            ios-version: "17"
-          - device: iphone-15-plus
-            ios-version: "18"
-          
           - device: iphone-15-pro
             ios-version: "17"
           - device: iphone-15-pro
-            ios-version: "18"
-          
-          - device: iphone-15-pro-max
-            ios-version: "17"
-          - device: iphone-15-pro-max
             ios-version: "18"
           
           # iPhone 16 series (iOS 18 only)
