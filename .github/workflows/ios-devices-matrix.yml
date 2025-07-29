@@ -103,7 +103,7 @@ jobs:
       - name: Set Flow File
         id: set-flow-file
         run: |
-          if [[ "${{ matrix.device }}" == "iphone-16-pro" || "${{ matrix.device }}" == "iphone-16-pro-max" ]]; then
+          if [[ "${{ matrix.device }}" == "iphone-16-pro" || "${{ matrix.device }}" == "iphone-16-pro-max" || "${{ matrix.device }}" == "ipad-pro-6th-gen" ]]; then
             echo "flow-file=./flows/ios-flow-simple.yaml" >> $GITHUB_OUTPUT
           else
             echo "flow-file=./flows/ios-flow.yaml" >> $GITHUB_OUTPUT
