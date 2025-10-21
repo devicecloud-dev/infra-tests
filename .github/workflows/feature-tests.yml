@@ -45,7 +45,7 @@ jobs:
 
       - name: Extract and Log Console URL
         run: |
-          jq -r '.consoleUrl' '/home/runner/work/infra-tests/infra-tests/Run Json File Flag Test_dcd.json'
+          jq -r '.consoleUrl' *_dcd.json
 
       - name: Run Android Locale Test
         continue-on-error: true
