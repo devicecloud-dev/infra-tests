@@ -11,4 +11,13 @@ appId: org.wikimedia.wikipedia
 - tapOn:
     text: "Got it"
     optional: true
+- tapOn:
+    text: "Got it"
+    optional: true
+- tapOn:
+    text: "Got it"
+    optional: true
+- tapOn:
+    text: "Got it"
+    optional: true
 - assertVisible: ".*Avon.*"
