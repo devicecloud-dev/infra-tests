@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set Flow File
+      - name: Set Flow File and App Binary
         id: set-flow-file
         run: |
           if [[ "${{ matrix.device }}" == "iphone-16-pro" || "${{ matrix.device }}" == "iphone-16-pro-max" || "${{ matrix.device }}" == "ipad-pro-6th-gen" ]]; then
@@ -91,7 +91,27 @@ jobs:
             echo "flow-file=./flows/ios-flow.yaml" >> $GITHUB_OUTPUT
           fi
 
-      - name: Run iOS Device Tests
+          # Use older Wikipedia zip for iOS 16 tests
+          if [[ "${{ matrix.ios-version }}" == "16" ]]; then
+            echo "use-zip=true" >> $GITHUB_OUTPUT
+          else
+            echo "use-zip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run iOS Device Tests (iOS 16 with zip)
+        if: steps.set-flow-file.outputs.use-zip == 'true'
+        uses: devicecloud-dev/device-cloud-for-maestro@main
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: binaries/wikipedia-pre26.zip
+          workspace: ${{ steps.set-flow-file.outputs.flow-file }}
+          ios-device: ${{ matrix.device }}
+          ios-version: ${{ matrix.ios-version }}
+          name: "${{ matrix.device }} - iOS ${{ matrix.ios-version }} Test Run"
+
+      - name: Run iOS Device Tests (Other versions with app-binary-id)
+        if: steps.set-flow-file.outputs.use-zip != 'true'
         uses: devicecloud-dev/device-cloud-for-maestro@main
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
