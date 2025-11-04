@@ -73,11 +73,7 @@ jobs:
           - device: iphone-16-pro-max
             ios-version: "26"
           
-          # iPad Pro (iOS 16-18, 26)
-          - device: ipad-pro-6th-gen
-            ios-version: "16"
-          - device: ipad-pro-6th-gen
-            ios-version: "17"
+          # iPad Pro (iOS 18, 26)
           - device: ipad-pro-6th-gen
             ios-version: "18"
           - device: ipad-pro-6th-gen
