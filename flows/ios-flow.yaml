@@ -8,4 +8,7 @@ appId: org.wikimedia.wikipedia
 - tapOn: "Search Wikipedia"
 - inputText: "Bristol"
 - tapOn: "City and county in England"
+- tapOn:
+    text: "Got it"
+    optional: true
 - assertVisible: ".*Avon.*"
