@@ -7,7 +7,9 @@ appId: org.wikimedia.wikipedia
 - assertVisible: "Search Wikipedia"
 - tapOn: "Search Wikipedia"
 - inputText: "Bristol"
+- waitForAnimationToEnd
 - tapOn: "City and county in England"
+- waitForAnimationToEnd
 - tapOn:
     text: "Got it"
     optional: true
