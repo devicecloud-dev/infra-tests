@@ -1,0 +1,11 @@
+appId: org.wikipedia
+---
+- launchApp
+- assertVisible: "The Free.*"
+- assertVisible: "Skip"
+- tapOn: "Skip"
+- assertVisible: "Search Wikipedia"
+- tapOn: "Search Wikipedia"
+- inputText: "Bristol"
+- tapOn: "City and county in England"
+- assertVisible: ".*Avon.*"
