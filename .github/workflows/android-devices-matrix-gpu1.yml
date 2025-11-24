@@ -23,41 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Pixel 6 supports API 29-35
-          - device: pixel-6
-            api-level: "29"
-          - device: pixel-6
-            api-level: "30"
-          - device: pixel-6
-            api-level: "31"
-          - device: pixel-6
-            api-level: "32"
-          - device: pixel-6
-            api-level: "33"
-          - device: pixel-6
-            api-level: "34"
-          - device: pixel-6
-            api-level: "35"
-
-          # Google Play versions of Pixel 6
-          - device: pixel-6
-            api-level: "34"
-            google-play: true
-          - device: pixel-6
-            api-level: "35"
-            google-play: true
-
-          # Pixel 6 Pro supports API 33-35
-          - device: pixel-6-pro
-            api-level: "33"
-          - device: pixel-6-pro
-            api-level: "34"
-          - device: pixel-6-pro
-            api-level: "35"
-
-          # Pixel 7 supports API 33-35
-          - device: pixel-7
-            api-level: "33"
+          # gpu1 only supports Pixel 7 with API 34-35
           - device: pixel-7
             api-level: "34"
           - device: pixel-7
@@ -70,22 +36,6 @@ jobs:
           - device: pixel-7
             api-level: "35"
             google-play: true
-
-          # Pixel 7 Pro supports API 33-35
-          - device: pixel-7-pro
-            api-level: "33"
-          - device: pixel-7-pro
-            api-level: "34"
-          - device: pixel-7-pro
-            api-level: "35"
-
-          # Generic Tablet supports API 33-35
-          - device: generic-tablet
-            api-level: "33"
-          - device: generic-tablet
-            api-level: "34"
-          - device: generic-tablet
-            api-level: "35"
 
 
     steps:
