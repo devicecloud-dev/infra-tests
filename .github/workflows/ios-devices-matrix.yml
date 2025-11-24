@@ -100,7 +100,7 @@ jobs:
 
       - name: Run iOS Device Tests (iOS 16 with zip)
         if: steps.set-flow-file.outputs.use-zip == 'true'
-        uses: devicecloud-dev/device-cloud-for-maestro@main
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
@@ -112,7 +112,7 @@ jobs:
 
       - name: Run iOS Device Tests (Other versions with app-binary-id)
         if: steps.set-flow-file.outputs.use-zip != 'true'
-        uses: devicecloud-dev/device-cloud-for-maestro@main
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
