@@ -15,6 +15,11 @@ on:
           - dev
         default: "prod"
         required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   test-android:
@@ -49,4 +54,5 @@ jobs:
           app-file: ./binaries/sample.apk
           workspace: ./flows/android-flow.yaml
           maestro-version: ${{ matrix.maestro-version }}
+          use-beta: ${{ github.event.inputs.use-beta }}
           name: "Android - Maestro ${{ matrix.maestro-version }} Test Run"

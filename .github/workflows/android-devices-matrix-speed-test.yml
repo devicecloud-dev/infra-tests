@@ -11,6 +11,11 @@ on:
           - dev
         default: "prod"
         required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   test-android-devices:
@@ -26,4 +31,5 @@ jobs:
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
           app-file: ./binaries/sample.apk
           workspace: ./flows/speed-tests
+          use-beta: ${{ github.event.inputs.use-beta }}
           name: "Android Speed Test"

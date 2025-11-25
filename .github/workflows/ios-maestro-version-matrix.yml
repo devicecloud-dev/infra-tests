@@ -15,6 +15,11 @@ on:
           - dev
         default: "prod"
         required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   test-ios:
@@ -48,4 +53,5 @@ jobs:
           app-binary-id: ${{ github.event.inputs.environment == 'dev' && '9e4f3c0b-146e-4bc8-8820-d49eb5e25198' || '81155b2c-e18d-4527-871a-6788068d836b' }}
           workspace: ./flows/ios-flow.yaml
           maestro-version: ${{ matrix.maestro-version }}
+          use-beta: ${{ github.event.inputs.use-beta }}
           name: "iOS - Maestro ${{ matrix.maestro-version }} Test Run"

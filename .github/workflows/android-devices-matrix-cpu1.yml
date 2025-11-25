@@ -15,6 +15,11 @@ on:
           - dev
         default: "prod"
         required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   test-android-devices:
@@ -105,4 +110,5 @@ jobs:
           android-api-level: ${{ matrix.api-level }}
           google-play: ${{ matrix.google-play || '' }}
           runner-type: cpu1
+          use-beta: ${{ github.event.inputs.use-beta }}
           name: "${{ matrix.device }} - Android API ${{ matrix.api-level }}${{ matrix.google-play && ' with Play' || '' }} Test Run"

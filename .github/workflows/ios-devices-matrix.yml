@@ -15,6 +15,11 @@ on:
           - dev
         default: "prod"
         required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   test-ios-devices:
@@ -108,6 +113,7 @@ jobs:
           workspace: ${{ steps.set-flow-file.outputs.flow-file }}
           ios-device: ${{ matrix.device }}
           ios-version: ${{ matrix.ios-version }}
+          use-beta: ${{ github.event.inputs.use-beta }}
           name: "${{ matrix.device }} - iOS ${{ matrix.ios-version }} Test Run"
 
       - name: Run iOS Device Tests (Other versions with app-binary-id)
@@ -120,4 +126,5 @@ jobs:
           workspace: ${{ steps.set-flow-file.outputs.flow-file }}
           ios-device: ${{ matrix.device }}
           ios-version: ${{ matrix.ios-version }}
+          use-beta: ${{ github.event.inputs.use-beta }}
           name: "${{ matrix.device }} - iOS ${{ matrix.ios-version }} Test Run"

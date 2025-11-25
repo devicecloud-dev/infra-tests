@@ -12,6 +12,11 @@ on:
           - dev
         default: "prod"
         required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   test-cpu1-duplicate-flows:
@@ -29,4 +34,5 @@ jobs:
           app-file: ./binaries/sample.apk
           workspace: ./flows/cpu1-dumb-test/
           runner-type: cpu1
+          use-beta: ${{ github.event.inputs.use-beta }}
           name: "Dumb CPU1 Test - 100 Duplicate Flows"
