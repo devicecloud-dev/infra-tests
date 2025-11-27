@@ -95,14 +95,6 @@ jobs:
           - device: generic-tablet
             api-level: "35"
 
-          # Google Play versions of Generic Tablet
-          - device: generic-tablet
-            api-level: "34"
-            google-play: true
-          - device: generic-tablet
-            api-level: "35"
-            google-play: true
-
     steps:
       - uses: actions/checkout@v3
 
