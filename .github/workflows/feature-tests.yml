@@ -77,17 +77,6 @@ jobs:
           use-beta: ${{ github.event.inputs.use-beta }}
           name: Run iOS Locale Test
 
-      - name: Run iOS M4 Runner Type Test
-        uses: devicecloud-dev/device-cloud-for-maestro@v2
-        with:
-          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
-          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
-          app-binary-id: ${{ github.event.inputs.environment == 'dev' && '9e4f3c0b-146e-4bc8-8820-d49eb5e25198' || '81155b2c-e18d-4527-871a-6788068d836b' }}
-          workspace: ./flows/ios-flow.yaml
-          runner-type: m4
-          use-beta: ${{ github.event.inputs.use-beta }}
-          name: Run iOS M4 Runner Type Test
-
       - name: Run Android Orientation Test
         uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
