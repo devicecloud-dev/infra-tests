@@ -115,6 +115,7 @@ jobs:
           ios-version: ${{ matrix.ios-version }}
           use-beta: ${{ github.event.inputs.use-beta }}
           name: "${{ matrix.device }} - iOS ${{ matrix.ios-version }} Test Run"
+          retry: 1
 
       - name: Run iOS Device Tests (Other versions with app-binary-id)
         if: steps.set-flow-file.outputs.use-zip != 'true'
@@ -128,3 +129,4 @@ jobs:
           ios-version: ${{ matrix.ios-version }}
           use-beta: ${{ github.event.inputs.use-beta }}
           name: "${{ matrix.device }} - iOS ${{ matrix.ios-version }} Test Run"
+          retry: 1

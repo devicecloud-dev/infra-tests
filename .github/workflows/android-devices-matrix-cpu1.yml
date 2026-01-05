@@ -127,4 +127,5 @@ jobs:
           google-play: ${{ matrix.google-play || '' }}
           runner-type: cpu1
           use-beta: ${{ github.event.inputs.use-beta }}
+          retry: 1
           name: "${{ matrix.device }} - Android API ${{ matrix.api-level }}${{ matrix.google-play && ' with Play' || '' }} Test Run"

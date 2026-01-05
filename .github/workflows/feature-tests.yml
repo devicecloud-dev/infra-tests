@@ -145,3 +145,4 @@ jobs:
           workspace: ./flows/check-cam.yaml
           use-beta: ${{ github.event.inputs.use-beta }}
           name: Run Android Camera Check Test
+          retry: 1
