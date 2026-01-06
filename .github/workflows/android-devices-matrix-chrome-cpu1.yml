@@ -2,8 +2,8 @@ name: Test Android Devices [chrome, cpu1]
 
 on:
   # Run daily at 11 PM UTC
-  schedule:
-    - cron: '0 23 * * *'
+  # schedule:
+  #   - cron: '0 23 * * *'
   # Allow manual triggering
   workflow_dispatch:
     inputs:
