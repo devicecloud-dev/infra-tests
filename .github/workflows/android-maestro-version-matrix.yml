@@ -49,7 +49,7 @@ jobs:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
           app-file: ./binaries/sample.apk
-          workspace: ./flows/android-flow.yaml
+          workspace: ./flows/android-flow-simple.yaml
           maestro-version: ${{ matrix.maestro-version }}
           use-beta: ${{ github.event.inputs.use-beta }}
           name: "Android - Maestro ${{ matrix.maestro-version }} Test Run"
