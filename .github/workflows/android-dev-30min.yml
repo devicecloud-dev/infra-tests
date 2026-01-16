@@ -1,0 +1,35 @@
+name: Android Dev Test [30min]
+
+on:
+  schedule:
+    # Run every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  test-android-dev:
+    name: Android Dev Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Android Device Tests
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
+        with:
+          api-key: ${{ secrets.DCD_DEV_API_KEY }}
+          api-url: https://api.dev.devicecloud.dev
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow.yaml
+          android-device: pixel-6
+          android-api-level: "34"
+          runner-type: cpu1
+          use-beta: ${{ github.event.inputs.use-beta }}
+          retry: 1
+          name: "Android Dev Test (30min schedule)"
