@@ -3,7 +3,7 @@ name: Android Dev Test [30min]
 on:
   schedule:
     # Run every 30 minutes
-    - cron: '*/30 * * * *'
+    # - cron: '*/30 * * * *'
   workflow_dispatch:
     inputs:
       use-beta:
