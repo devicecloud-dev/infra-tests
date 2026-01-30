@@ -42,8 +42,6 @@ jobs:
           # iPhone 15 series (iOS 17-18)
           - device: iphone-15
             ios-version: "17"
-          - device: iphone-15
-            ios-version: "18"
 
           # iPhone 16 series (iOS 18, 26)
           - device: iphone-16
