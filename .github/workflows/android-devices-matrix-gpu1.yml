@@ -1,9 +1,9 @@
 name: Test Android Devices [gpu1]
 
 on:
-  # Run daily at 11 PM UTC
+  # Run at 11 PM UTC every 2 days
   schedule:
-    - cron: '0 23 * * *'
+    - cron: '0 23 */2 * *'
   # Allow manual triggering
   workflow_dispatch:
     inputs:

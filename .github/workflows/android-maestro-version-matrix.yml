@@ -1,9 +1,9 @@
 name: Test Multiple Maestro Versions on Android
 
 on:
-  # Run at 4 AM UTC daily
+  # Run at 4 AM UTC every 2 days
   schedule:
-    - cron: "0 4 * * *"
+    - cron: "0 4 */2 * *"
   # Allow manual triggering
   workflow_dispatch:
     inputs:
