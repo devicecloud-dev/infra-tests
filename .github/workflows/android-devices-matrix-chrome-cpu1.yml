@@ -60,15 +60,11 @@ jobs:
             api-level: "36"
             google-play: true
 
-          # Pixel 6 Pro supports API 33-36
+          # Pixel 6 Pro supports API 33, 35
           - device: pixel-6-pro
             api-level: "33"
           - device: pixel-6-pro
-            api-level: "34"
-          - device: pixel-6-pro
             api-level: "35"
-          - device: pixel-6-pro
-            api-level: "36"
 
           # Pixel 7 supports API 33-36
           - device: pixel-7

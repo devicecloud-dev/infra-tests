@@ -39,13 +39,9 @@ jobs:
           - device: pixel-6
             api-level: "36"
 
-          # Pixel 6 Pro API 34-36
-          - device: pixel-6-pro
-            api-level: "34"
+          # Pixel 6 Pro API 35
           - device: pixel-6-pro
             api-level: "35"
-          - device: pixel-6-pro
-            api-level: "36"
 
           # Pixel 7 API 34-36
           - device: pixel-7
