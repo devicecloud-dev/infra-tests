@@ -97,16 +97,6 @@ jobs:
           - device: pixel-7-pro
             api-level: "36"
 
-          # Generic Tablet supports API 33-36
-          - device: generic-tablet
-            api-level: "33"
-          - device: generic-tablet
-            api-level: "34"
-          - device: generic-tablet
-            api-level: "35"
-          - device: generic-tablet
-            api-level: "36"
-
     steps:
       - uses: actions/checkout@v3
 
