@@ -49,17 +49,6 @@ jobs:
           - device: pixel-6
             api-level: "36"
 
-          # Google Play versions of Pixel 6
-          - device: pixel-6
-            api-level: "34"
-            google-play: true
-          - device: pixel-6
-            api-level: "35"
-            google-play: true
-          - device: pixel-6
-            api-level: "36"
-            google-play: true
-
           # Pixel 6 Pro supports API 33, 35
           - device: pixel-6-pro
             api-level: "33"
@@ -76,15 +65,9 @@ jobs:
           - device: pixel-7
             api-level: "36"
 
-          # Google Play versions of Pixel 7
+          # Google Play: only pixel-7 / API 34 is supported
           - device: pixel-7
             api-level: "34"
-            google-play: true
-          - device: pixel-7
-            api-level: "35"
-            google-play: true
-          - device: pixel-7
-            api-level: "36"
             google-play: true
 
           # Pixel 7 Pro supports API 33-36

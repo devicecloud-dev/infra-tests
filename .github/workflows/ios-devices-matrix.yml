@@ -43,8 +43,13 @@ jobs:
           - device: iphone-15
             ios-version: "17"
 
-          # iPhone 16 series (iOS 26)
+          # iPhone 16 series (iOS 18, 26)
           - device: iphone-16
+            ios-version: "18"
+          - device: iphone-16
+            ios-version: "26"
+
+          - device: iphone-16-plus
             ios-version: "26"
 
           - device: iphone-16-pro
