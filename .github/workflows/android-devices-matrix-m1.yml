@@ -1,0 +1,44 @@
+name: Test Android Devices [m1]
+
+on:
+  # Run daily at 9 PM UTC
+  schedule:
+    - cron: '0 21 * * *'
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  test-android-devices:
+    name: pixel-7 - API 34
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Android Device Test
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow.yaml
+          android-device: pixel-7
+          android-api-level: "34"
+          runner-type: m1
+          use-beta: ${{ github.event.inputs.use-beta }}
+          retry: 1
+          name: "pixel-7 - Android API 34 Test Run [m1]"
