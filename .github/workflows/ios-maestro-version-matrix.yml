@@ -31,7 +31,6 @@ jobs:
       fail-fast: false
       matrix:
         maestro-version:
-          - "1.39.5"
           - "1.41.0"
           - "2.0.4"
           - "2.0.9"
