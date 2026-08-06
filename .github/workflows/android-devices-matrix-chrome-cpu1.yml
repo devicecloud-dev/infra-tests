@@ -48,6 +48,8 @@ jobs:
             api-level: "35"
           - device: pixel-6
             api-level: "36"
+          - device: pixel-6
+            api-level: "37"
 
           # Pixel 6 Pro supports API 33, 35
           - device: pixel-6-pro
@@ -64,6 +66,8 @@ jobs:
             api-level: "35"
           - device: pixel-7
             api-level: "36"
+          - device: pixel-7
+            api-level: "37"
 
           # Google Play: only pixel-7 / API 34 is supported
           - device: pixel-7
@@ -79,6 +83,8 @@ jobs:
             api-level: "35"
           - device: pixel-7-pro
             api-level: "36"
+          - device: pixel-7-pro
+            api-level: "37"
 
           # Generic Tablet supports API 33 only
           - device: generic-tablet
