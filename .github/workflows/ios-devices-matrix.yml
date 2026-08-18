@@ -31,9 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # iPhone 14 series (iOS 16-18)
-          - device: iphone-14
-            ios-version: "16"
+          # iPhone 14 series (iOS 17-18)
           - device: iphone-14
             ios-version: "17"
           - device: iphone-14
@@ -80,29 +78,7 @@ jobs:
             echo "flow-file=./flows/ios-flow.yaml" >> $GITHUB_OUTPUT
           fi
 
-          # Use older Wikipedia zip for iOS 16 tests
-          if [[ "${{ matrix.ios-version }}" == "16" ]]; then
-            echo "use-zip=true" >> $GITHUB_OUTPUT
-          else
-            echo "use-zip=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Run iOS Device Tests (iOS 16 with zip)
-        if: steps.set-flow-file.outputs.use-zip == 'true'
-        uses: devicecloud-dev/device-cloud-for-maestro@v2
-        with:
-          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
-          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
-          app-file: binaries/wikipedia-pre26.zip
-          workspace: ${{ steps.set-flow-file.outputs.flow-file }}
-          ios-device: ${{ matrix.device }}
-          ios-version: ${{ matrix.ios-version }}
-          use-beta: ${{ github.event.inputs.use-beta }}
-          name: "${{ matrix.device }} - iOS ${{ matrix.ios-version }} Test Run"
-          retry: 1
-
-      - name: Run iOS Device Tests (Other versions with app-binary-id)
-        if: steps.set-flow-file.outputs.use-zip != 'true'
+      - name: Run iOS Device Tests
         uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
