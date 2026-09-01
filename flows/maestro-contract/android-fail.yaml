@@ -1,0 +1,14 @@
+# Deliberately FAILS, on an assertion and only after several passing steps, so the
+# bundle carries a real step history and a failure screenshot. A flow that fails on its
+# first command proves almost nothing about the artifact contract.
+#
+# It must not fail by being unparseable: that produces an empty FAILED with no bundle,
+# which is a different failure mode.
+appId: org.wikipedia
+tags:
+  - android
+  - maestro-contract
+---
+- runFlow: subflows/onboarding-android.yaml
+- runScript: scripts/pick-query.js
+- assertVisible: "ZZZ_MAESTRO_CONTRACT_NEGATIVE_ASSERTION_ZZZ"

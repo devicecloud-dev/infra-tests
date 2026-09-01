@@ -1,0 +1,18 @@
+# A passing flow that produces a FULL artifact bundle: a subflow (so per-flow bundle
+# directories and their commands.json are exercised), a runScript with output
+# interpolation, and a conditional runFlow.
+appId: org.wikipedia
+tags:
+  - android
+  - maestro-contract
+---
+- runFlow: subflows/onboarding-android.yaml
+- runScript: scripts/pick-query.js
+- runFlow:
+    when:
+      visible: "Search Wikipedia"
+    commands:
+      - tapOn: "Search Wikipedia"
+      - inputText: ${output.result}
+      - assertVisible: ${output.result}
+- takeScreenshot: contract-android-pass

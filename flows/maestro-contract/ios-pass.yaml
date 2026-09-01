@@ -1,0 +1,15 @@
+appId: org.wikimedia.wikipedia
+tags:
+  - ios
+  - maestro-contract
+---
+- runFlow: subflows/onboarding-ios.yaml
+- runScript: scripts/pick-query.js
+- runFlow:
+    when:
+      visible: "Search Wikipedia"
+    commands:
+      - tapOn: "Search Wikipedia"
+      - inputText: ${output.result}
+      - assertVisible: ${output.result}
+- takeScreenshot: contract-ios-pass

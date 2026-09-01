@@ -1,6 +1,26 @@
 name: Test Multiple Maestro Versions on Android
 
+# Sweeps every Maestro version the target environment supports, so a regression in
+# how we parse an OLDER version's output shows up too - not just whether the newest
+# one boots. The list is asked for at run time (see resolve-maestro-versions.yml)
+# rather than hardcoded here, so adding a Maestro version needs no edit in this repo.
+
 on:
+  # Callable so maestro-version-validate.yml can run the whole sweep as one of its
+  # stages: a new version passing on its own says nothing about whether we broke the
+  # parsing of an older one, and that regression is exactly what the sweep is for.
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: string
+        required: false
+        default: ""
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        required: false
+        default: false
   # Run at 4 AM UTC every 2 days
   schedule:
     - cron: "0 4 */2 * *"
@@ -22,25 +42,25 @@ on:
         required: false
 
 jobs:
+  resolve:
+    name: Resolve supported versions
+    uses: ./.github/workflows/resolve-maestro-versions.yml
+    with:
+      # Empty on a schedule event, which the reusable workflow reads as prod - the
+      # behaviour the old inline ternary had by accident.
+      environment: ${{ inputs.environment }}
+    secrets: inherit
+
   test-android:
     name: Android - Maestro ${{ matrix.maestro-version }}
+    needs: resolve
     runs-on: ubuntu-latest
 
     strategy:
       # Don't cancel all jobs if one fails
       fail-fast: false
       matrix:
-        maestro-version:
-          - "2.0.4"
-          - "2.0.9"
-          - "2.1.0"
-          - "2.2.0"
-          - "2.5.0"
-          - "2.5.1"
-          - "2.6.0"
-          - "2.6.1"
-          - "2.7.0"
-          - "2.8.0"
+        maestro-version: ${{ fromJSON(needs.resolve.outputs.versions) }}
 
     steps:
       - uses: actions/checkout@v3
@@ -48,10 +68,10 @@ jobs:
       - name: Run Android Maestro Tests
         uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
-          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
-          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          api-key: ${{ needs.resolve.outputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ needs.resolve.outputs.api-url }}
           app-file: ./binaries/sample.apk
           workspace: ./flows/android-flow-simple.yaml
           maestro-version: ${{ matrix.maestro-version }}
-          use-beta: ${{ github.event.inputs.use-beta }}
+          use-beta: ${{ inputs.use-beta }}
           name: "Android - Maestro ${{ matrix.maestro-version }} Test Run"
