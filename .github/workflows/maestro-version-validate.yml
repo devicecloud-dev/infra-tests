@@ -117,28 +117,48 @@ jobs:
           echo "baseline=$baseline" >> "$GITHUB_OUTPUT"
           echo "Validating $VERSION against $ENVIRONMENT, diffing artifacts against $baseline"
 
-          # The six legs. Android runner types are NOT interchangeable: `default`
-          # (cpu1) and `gpu1` run different emulator images, and `m1` is mac-02, an
-          # arm64 Mac that keeps its own copy of the binaries. A version can land on
-          # one and miss another, so all three are exercised. Google Play is pinned to
+          # The legs. Android runner types are NOT interchangeable: `default` (cpu1) and
+          # `gpu1` run different emulator images, and `m1` is a single arm64 Mac that
+          # keeps its own copy of the binaries. A version can land on one and miss
+          # another, so each is exercised separately. Google Play is pinned to
           # pixel-7 / API 34 because that matrix is deliberately sparse - do not widen it.
-          cat > legs.json <<'JSON'
+          #
+          # `envs` is which environments actually have hardware for that leg, and it is
+          # load-bearing rather than tidiness. The m1 Android runner and the whole m4
+          # rack report to PRODUCTION only; dev's Mac fleet is mac-01 plus the garage
+          # commissioning batch. A dev run of those legs would be accepted by the API and
+          # then sit PENDING for ever, because no host advertises what it asks for and
+          # nothing reaps a stale PENDING - so it would hang the release rather than fail
+          # it.
+          cat > all-legs.json <<'JSON'
           [
-            {"key": "android-cpu1", "platform": "android", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": ""},
-            {"key": "android-gpu1", "platform": "android", "runner-type": "gpu1", "google-play": "", "android-device": "", "android-api-level": ""},
-            {"key": "android-m1", "platform": "android", "runner-type": "m1", "google-play": "", "android-device": "", "android-api-level": ""},
-            {"key": "android-play", "platform": "android", "runner-type": "default", "google-play": "true", "android-device": "pixel-7", "android-api-level": "34"},
-            {"key": "ios-default", "platform": "ios", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": ""},
-            {"key": "ios-m4", "platform": "ios", "runner-type": "m4", "google-play": "", "android-device": "", "android-api-level": ""}
+            {"key": "android-cpu1", "platform": "android", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
+            {"key": "android-gpu1", "platform": "android", "runner-type": "gpu1", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
+            {"key": "android-m1", "platform": "android", "runner-type": "m1", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["prod"]},
+            {"key": "android-play", "platform": "android", "runner-type": "default", "google-play": "true", "android-device": "pixel-7", "android-api-level": "34", "envs": ["dev", "prod"]},
+            {"key": "ios-default", "platform": "ios", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
+            {"key": "ios-m4", "platform": "ios", "runner-type": "m4", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["prod"]}
           ]
           JSON
+          jq -c --arg env "$ENVIRONMENT" '[.[] | select(.envs | index($env)) | del(.envs)]' all-legs.json > legs.json
           echo "legs=$(jq -c . legs.json)" >> "$GITHUB_OUTPUT"
           jq -r '.[] | "  leg " + .key' legs.json
+          # Say what is NOT covered, every time. A leg silently dropped is a coverage
+          # claim this workflow would otherwise be making falsely.
+          skipped=$(jq -r --arg env "$ENVIRONMENT" '[.[] | select(.envs | index($env) | not) | .key] | join(", ")' all-legs.json)
+          if [ -n "$skipped" ]; then
+            echo "::warning::Not covered on $ENVIRONMENT (no hardware in that environment): $skipped"
+            echo "Not covered on \`$ENVIRONMENT\`: $skipped" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   legs:
     name: ${{ matrix.leg.key }} - Maestro ${{ inputs.version }}
     needs: [resolve, plan]
     runs-on: ubuntu-latest
+    # The action polls until the run reaches a terminal state, and a job no host can
+    # claim never does - nothing reaps a stale PENDING. Without a ceiling one starved
+    # leg would hold the release open for the full six-hour job limit.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -240,6 +260,7 @@ jobs:
     name: junit ${{ matrix.platform }} - Maestro ${{ inputs.version }}
     needs: [resolve, plan]
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
