@@ -1,6 +1,25 @@
 name: Test Multiple Maestro Versions on iOS
 
+# The iOS half of the version sweep. See android-maestro-version-matrix.yml - the
+# version list is resolved at run time rather than hardcoded, so a Maestro release
+# needs no edit here.
+
 on:
+  # Callable so maestro-version-validate.yml can run the whole sweep as one of its
+  # stages: a new version passing on its own says nothing about whether we broke the
+  # parsing of an older one, and that regression is exactly what the sweep is for.
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: string
+        required: false
+        default: ""
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        required: false
+        default: false
   # Run at 3 AM UTC every 2 days
   schedule:
     - cron: "0 3 */2 * *"
@@ -22,35 +41,40 @@ on:
         required: false
 
 jobs:
+  resolve:
+    name: Resolve supported versions
+    uses: ./.github/workflows/resolve-maestro-versions.yml
+    with:
+      # Empty on a schedule event, which the reusable workflow reads as prod - the
+      # behaviour the old inline ternary had by accident.
+      environment: ${{ inputs.environment }}
+    secrets: inherit
+
   test-ios:
     name: iOS - Maestro ${{ matrix.maestro-version }}
+    needs: resolve
     runs-on: ubuntu-latest
 
     strategy:
       # Don't cancel all jobs if one fails
       fail-fast: false
       matrix:
-        maestro-version:
-          - "2.0.4"
-          - "2.0.9"
-          - "2.1.0"
-          - "2.2.0"
-          - "2.5.0"
-          - "2.5.1"
-          - "2.6.0"
-          - "2.6.1"
-          - "2.7.0"
-          - "2.8.0"
+        maestro-version: ${{ fromJSON(needs.resolve.outputs.versions) }}
+
     steps:
       - uses: actions/checkout@v3
 
       - name: Run iOS Maestro Tests
         uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
-          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
-          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
-          app-binary-id: ${{ github.event.inputs.environment == 'dev' && '299a3fc8-8024-4c5e-93fd-ee2512b227ca' || 'c5c8c570-d2c5-440c-9183-f39c09999d8d' }}
+          api-key: ${{ needs.resolve.outputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ needs.resolve.outputs.api-url }}
+          # Uploads the binary rather than naming a pre-uploaded one. The previous
+          # app-binary-id pinned two hashes that retention eventually purges, and when
+          # that happened EVERY cell failed with "Binary not found" - which reads as a
+          # Maestro regression and is not one. An upload per run is immune to it.
+          app-file: ./binaries/sample.zip
           workspace: ./flows/ios-flow-simple.yaml
           maestro-version: ${{ matrix.maestro-version }}
-          use-beta: ${{ github.event.inputs.use-beta }}
+          use-beta: ${{ inputs.use-beta }}
           name: "iOS - Maestro ${{ matrix.maestro-version }} Test Run"

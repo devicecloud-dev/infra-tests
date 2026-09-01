@@ -1,0 +1,114 @@
+name: "Resolve Maestro versions (reusable)"
+
+# Ask the platform which Maestro versions it supports, instead of keeping a copy of
+# the list in every matrix.
+#
+# Why this exists: the two version matrices used to hardcode `strategy.matrix.
+# maestro-version`, so every Maestro release meant editing them, and the edit could
+# not be merged to `main` until production supported the version — otherwise the
+# 2-day cron went red. That coupling is gone: each run asks whichever environment it
+# targets, so the sweep is always exactly the supported set for that environment and
+# a version bump needs no change here at all.
+#
+# It also fixes the environment fall-through. `github.event.inputs.environment` is
+# EMPTY on a `schedule` event, so every ternary keyed on it silently resolved to the
+# production branch. That happened to be the intent for the nightly sweeps, but it
+# was never stated and nothing else could rely on it. The environment is decided
+# once, here, and handed back explicitly.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "prod or dev. Empty (a schedule event) means prod."
+        required: false
+        type: string
+        default: ""
+    outputs:
+      environment:
+        description: "The environment actually used - prod or dev, never empty."
+        value: ${{ jobs.resolve.outputs.environment }}
+      api-url:
+        description: "API base URL for that environment. Empty for prod, which is the action's own default."
+        value: ${{ jobs.resolve.outputs.api-url }}
+      versions:
+        description: "JSON array of supported Maestro versions, ready for strategy.matrix."
+        value: ${{ jobs.resolve.outputs.versions }}
+      latest:
+        description: "What --maestro-version latest resolves to in that environment."
+        value: ${{ jobs.resolve.outputs.latest }}
+      default:
+        description: "The version a run gets when it names none."
+        value: ${{ jobs.resolve.outputs.default }}
+
+jobs:
+  resolve:
+    name: Resolve
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      api-url: ${{ steps.env.outputs.api-url }}
+      resolve-url: ${{ steps.env.outputs.resolve-url }}
+      versions: ${{ steps.fetch.outputs.versions }}
+      latest: ${{ steps.fetch.outputs.latest }}
+      default: ${{ steps.fetch.outputs.default }}
+    steps:
+      - name: Decide the environment
+        id: env
+        env:
+          REQUESTED: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          case "${REQUESTED:-}" in
+            dev) env=dev; url=https://api.dev.devicecloud.dev ;;
+            prod|"") env=prod; url=https://api.devicecloud.dev ;;
+            *) echo "::error::Unknown environment '${REQUESTED}' (expected prod or dev)"; exit 1 ;;
+          esac
+          echo "environment=$env" >> "$GITHUB_OUTPUT"
+          # Blank for prod: the action defaults to the production API, and every
+          # existing workflow passes an empty api-url there. Keeping that exact
+          # behaviour means this can be dropped in without changing what prod runs do.
+          if [ "$env" = "dev" ]; then
+            echo "api-url=$url" >> "$GITHUB_OUTPUT"
+          else
+            echo "api-url=" >> "$GITHUB_OUTPUT"
+          fi
+          # Always populated, because this step's own next step has to call something.
+          echo "resolve-url=$url" >> "$GITHUB_OUTPUT"
+          echo "Resolving against $env ($url)"
+
+      - name: Fetch the supported versions
+        id: fetch
+        env:
+          API_URL: ${{ steps.env.outputs.resolve-url }}
+          API_KEY: ${{ steps.env.outputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+        run: |
+          set -euo pipefail
+          # The customer-facing endpoint, with the org key these workflows already
+          # hold - not the internal one, which needs a runner key no test repo should
+          # carry. It is the same data the CLI validates --maestro-version against, so
+          # a version this returns is by definition one a run can ask for.
+          body=$(curl -sS --fail-with-body --max-time 30 \
+            -H "x-app-api-key: ${API_KEY}" \
+            "${API_URL}/results/compatibility/data") || {
+              echo "::error::Could not reach ${API_URL}/results/compatibility/data"
+              exit 1
+            }
+
+          versions=$(echo "$body" | jq -c '.data.maestro.supportedVersions')
+          latest=$(echo "$body" | jq -r '.data.maestro.latestVersion')
+          default=$(echo "$body" | jq -r '.data.maestro.defaultVersion')
+
+          # An empty matrix is a workflow that silently tests nothing, which reads as a
+          # pass. Fail loudly instead.
+          if [ "$versions" = "null" ] || [ "$(echo "$versions" | jq 'length')" -eq 0 ]; then
+            echo "::error::The API returned no supported Maestro versions"
+            echo "$body" | head -c 2000
+            exit 1
+          fi
+
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "default=$default" >> "$GITHUB_OUTPUT"
+          echo "Supported: $(echo "$versions" | jq -r 'join(" ")')"
+          echo "latest -> $latest, default -> $default"

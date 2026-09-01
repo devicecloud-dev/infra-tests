@@ -1,0 +1,541 @@
+name: Validate a Maestro version
+
+# The gate a new Maestro version has to pass before it is rolled out.
+#
+# What the existing sweeps do NOT cover, and why this exists:
+#
+#   - They run one Android runner type (the default, cpu1 -> the STANDARD emulator
+#     image) and one Mac rack. gpu1 and m1 use different images and different hosts,
+#     and a version can be present on one and missing on another, which surfaces to a
+#     customer as "maestro version X not found" long after CI went green.
+#   - They run only the `-simple` flows and only passing ones. That proves the binary
+#     boots. It does not prove the artifact contract still holds - and that contract is
+#     undocumented upstream. Maestro 2.7.0 broke four parts of it at once (per-flow
+#     bundle directory, commands.json relocation, screenshot naming, and per-command
+#     log lines moving to a different runner class).
+#   - Nothing exercises `--report junit`, even though that flag decides which runner
+#     class emits the log lines. Testing one path hides half the breakage.
+#   - The worst failure mode here is silent: if the log parser stops recognising lines,
+#     `testResult.txt` comes out EMPTY and the run is reported to the customer as
+#     FAILED. Nothing failed. That is asserted directly below.
+#
+# So each leg runs a passing flow, a deliberately failing flow, and a junit run, then
+# the artifact bundle is checked - both against invariants that must always hold and
+# against the SAME flows on the previous version, which is the diff the SOP asks for
+# by hand.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The Maestro version to validate, e.g. 2.9.0"
+        required: true
+        type: string
+      environment:
+        description: "prod or dev. Empty means prod."
+        required: false
+        type: string
+        default: ""
+      baseline-version:
+        description: "Version to diff the artifact bundle against. Empty picks the newest supported version that is not the one under test."
+        required: false
+        type: string
+        default: ""
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "The Maestro version to validate, e.g. 2.9.0"
+        required: true
+        type: string
+      environment:
+        description: "Environment to run against"
+        type: choice
+        options:
+          - dev
+          - prod
+        default: "dev"
+        required: true
+      baseline-version:
+        description: "Version to diff the artifact bundle against (blank = the newest other supported version)"
+        required: false
+        type: string
+        default: ""
+
+concurrency:
+  # One validation per version per environment. Two at once would fight over the
+  # queue and make the timings meaningless.
+  group: maestro-validate-${{ inputs.version }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Resolve supported versions
+    uses: ./.github/workflows/resolve-maestro-versions.yml
+    with:
+      environment: ${{ inputs.environment }}
+    secrets: inherit
+
+  plan:
+    name: Plan
+    needs: resolve
+    runs-on: ubuntu-latest
+    outputs:
+      legs: ${{ steps.plan.outputs.legs }}
+      baseline: ${{ steps.plan.outputs.baseline }}
+    steps:
+      - name: Check the version is bookable, and pick a baseline
+        id: plan
+        env:
+          VERSION: ${{ inputs.version }}
+          BASELINE_INPUT: ${{ inputs.baseline-version }}
+          SUPPORTED: ${{ needs.resolve.outputs.versions }}
+          ENVIRONMENT: ${{ needs.resolve.outputs.environment }}
+        run: |
+          set -euo pipefail
+          if ! echo "$SUPPORTED" | jq -e --arg v "$VERSION" 'index($v)' >/dev/null; then
+            echo "::error::$ENVIRONMENT does not support Maestro $VERSION yet. Supported: $(echo "$SUPPORTED" | jq -r 'join(" ")')"
+            echo "The API gate has to be live before the devices can be validated - the CLI"
+            echo "validates --maestro-version client-side against this same list, so every leg"
+            echo "below would fail before reaching a device."
+            exit 1
+          fi
+
+          # Diff against the newest OTHER supported version, not the default. The
+          # contract breaks we care about are introduced by an upstream release, so the
+          # informative comparison is with the release immediately before it - that is
+          # the pair (2.6.1 -> 2.7.0) whose differences cost us a customer-visible
+          # regression.
+          if [ -n "${BASELINE_INPUT// /}" ]; then
+            baseline="$BASELINE_INPUT"
+          else
+            baseline=$(echo "$SUPPORTED" | jq -r --arg v "$VERSION" 'map(select(. != $v)) | last // ""')
+          fi
+          if [ -z "$baseline" ] || [ "$baseline" = "null" ]; then
+            echo "::error::No baseline version available to diff against"
+            exit 1
+          fi
+          echo "baseline=$baseline" >> "$GITHUB_OUTPUT"
+          echo "Validating $VERSION against $ENVIRONMENT, diffing artifacts against $baseline"
+
+          # The six legs. Android runner types are NOT interchangeable: `default`
+          # (cpu1) and `gpu1` run different emulator images, and `m1` is mac-02, an
+          # arm64 Mac that keeps its own copy of the binaries. A version can land on
+          # one and miss another, so all three are exercised. Google Play is pinned to
+          # pixel-7 / API 34 because that matrix is deliberately sparse - do not widen it.
+          cat > legs.json <<'JSON'
+          [
+            {"key": "android-cpu1", "platform": "android", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": ""},
+            {"key": "android-gpu1", "platform": "android", "runner-type": "gpu1", "google-play": "", "android-device": "", "android-api-level": ""},
+            {"key": "android-m1", "platform": "android", "runner-type": "m1", "google-play": "", "android-device": "", "android-api-level": ""},
+            {"key": "android-play", "platform": "android", "runner-type": "default", "google-play": "true", "android-device": "pixel-7", "android-api-level": "34"},
+            {"key": "ios-default", "platform": "ios", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": ""},
+            {"key": "ios-m4", "platform": "ios", "runner-type": "m4", "google-play": "", "android-device": "", "android-api-level": ""}
+          ]
+          JSON
+          echo "legs=$(jq -c . legs.json)" >> "$GITHUB_OUTPUT"
+          jq -r '.[] | "  leg " + .key' legs.json
+
+  legs:
+    name: ${{ matrix.leg.key }} - Maestro ${{ inputs.version }}
+    needs: [resolve, plan]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        leg: ${{ fromJSON(needs.plan.outputs.legs) }}
+        maestro: ["under-test", "baseline"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Which version this cell runs
+        id: v
+        env:
+          UNDER_TEST: ${{ inputs.version }}
+          BASELINE: ${{ needs.plan.outputs.baseline }}
+        run: |
+          set -euo pipefail
+          # Every leg runs twice: the version under test, and the one before it. The
+          # baseline half is what makes the artifact diff possible at all - comparing a
+          # new version's bundle against a remembered shape would go stale the first
+          # time we changed anything ourselves.
+          if [ "${{ matrix.maestro }}" = "baseline" ]; then
+            echo "version=$BASELINE" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$UNDER_TEST" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run the contract flows
+        id: run
+        # The workspace contains a deliberately failing flow, so the run reports FAILED
+        # by design and the action calls setFailed. The per-flow results are asserted
+        # below instead - that is the check, not the overall status.
+        continue-on-error: true
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
+        with:
+          api-key: ${{ needs.resolve.outputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ needs.resolve.outputs.api-url }}
+          app-file: ${{ matrix.leg.platform == 'ios' && './binaries/sample.zip' || './binaries/sample.apk' }}
+          workspace: ./flows/maestro-contract
+          include-tags: ${{ matrix.leg.platform }}
+          maestro-version: ${{ steps.v.outputs.version }}
+          runner-type: ${{ matrix.leg.runner-type }}
+          google-play: ${{ matrix.leg['google-play'] }}
+          android-device: ${{ matrix.leg['android-device'] }}
+          android-api-level: ${{ matrix.leg['android-api-level'] }}
+          download-artifacts: ALL
+          name: "contract ${{ matrix.leg.key }} - Maestro ${{ steps.v.outputs.version }}"
+
+      - name: Assert the per-flow results
+        env:
+          FLOW_RESULTS: ${{ steps.run.outputs.DEVICE_CLOUD_FLOW_RESULTS }}
+          UPLOAD_STATUS: ${{ steps.run.outputs.DEVICE_CLOUD_UPLOAD_STATUS }}
+          OUTCOME: ${{ steps.run.outcome }}
+        run: |
+          set -euo pipefail
+          # A run that never reached a device gives us nothing to check. This is also
+          # where "maestro version X not found" lands - the API accepted the version but
+          # the image or the host has not got it, which is the failure this whole
+          # pipeline exists to catch before a customer does.
+          if [ -z "${FLOW_RESULTS:-}" ] || [ "$FLOW_RESULTS" = "[]" ]; then
+            echo "::error::No flow results (upload status '${UPLOAD_STATUS:-none}', step outcome $OUTCOME) - the run did not reach a device"
+            exit 1
+          fi
+          echo "$FLOW_RESULTS" | jq .
+
+          pass=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-pass$"))] | .[0].status // "MISSING"')
+          fail=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-fail$"))] | .[0].status // "MISSING"')
+
+          ok=true
+          [ "$pass" = "PASSED" ] || { echo "::error::the passing flow reported $pass"; ok=false; }
+          # The negative flow is the guard against a vacuous pass: if a broken version
+          # made everything report PASSED, every other assertion here would still be
+          # green.
+          [ "$fail" = "FAILED" ] || { echo "::error::the deliberately failing flow reported $fail"; ok=false; }
+          $ok
+          echo "pass flow PASSED and fail flow FAILED, as expected"
+
+      - name: Keep the artifact bundle
+        run: |
+          set -euo pipefail
+          if [ ! -f artifacts.zip ]; then
+            echo "::error::no artifacts.zip - download-artifacts produced nothing, so the bundle cannot be checked"
+            ls -la
+            exit 1
+          fi
+          mkdir -p bundles
+          mv artifacts.zip "bundles/${{ matrix.leg.key }}-${{ matrix.maestro }}.zip"
+          ls -la bundles
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.leg.key }}-${{ matrix.maestro }}
+          path: bundles/*.zip
+          retention-days: 7
+
+  junit:
+    name: junit ${{ matrix.platform }} - Maestro ${{ inputs.version }}
+    needs: [resolve, plan]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [android, ios]
+        maestro: ["under-test", "baseline"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Which version this cell runs
+        id: v
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.maestro }}" = "baseline" ]; then
+            echo "version=${{ needs.plan.outputs.baseline }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run the contract flows with a junit report
+        id: run
+        continue-on-error: true
+        # `--report junit` changes WHICH runner class emits the per-command log lines,
+        # so a version can be fine without it and produce an unparseable log with it.
+        # Maestro 2.7.0 moved exactly those lines. One leg per platform is enough - the
+        # emission path is a property of the Maestro version, not of the host.
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
+        with:
+          api-key: ${{ needs.resolve.outputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ needs.resolve.outputs.api-url }}
+          app-file: ${{ matrix.platform == 'ios' && './binaries/sample.zip' || './binaries/sample.apk' }}
+          workspace: ./flows/maestro-contract
+          include-tags: ${{ matrix.platform }}
+          maestro-version: ${{ steps.v.outputs.version }}
+          report: junit
+          download-artifacts: ALL
+          name: "contract junit ${{ matrix.platform }} - Maestro ${{ steps.v.outputs.version }}"
+
+      - name: Assert the per-flow results
+        env:
+          FLOW_RESULTS: ${{ steps.run.outputs.DEVICE_CLOUD_FLOW_RESULTS }}
+          UPLOAD_STATUS: ${{ steps.run.outputs.DEVICE_CLOUD_UPLOAD_STATUS }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FLOW_RESULTS:-}" ] || [ "$FLOW_RESULTS" = "[]" ]; then
+            echo "::error::No flow results (upload status '${UPLOAD_STATUS:-none}') - the junit run did not reach a device"
+            exit 1
+          fi
+          echo "$FLOW_RESULTS" | jq .
+          pass=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-pass$"))] | .[0].status // "MISSING"')
+          fail=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-fail$"))] | .[0].status // "MISSING"')
+          ok=true
+          [ "$pass" = "PASSED" ] || { echo "::error::junit: the passing flow reported $pass"; ok=false; }
+          [ "$fail" = "FAILED" ] || { echo "::error::junit: the deliberately failing flow reported $fail"; ok=false; }
+          $ok
+
+      - name: Keep the artifact bundle
+        run: |
+          set -euo pipefail
+          if [ ! -f artifacts.zip ]; then
+            echo "::error::no artifacts.zip from the junit run"
+            ls -la
+            exit 1
+          fi
+          mkdir -p bundles
+          mv artifacts.zip "bundles/junit-${{ matrix.platform }}-${{ matrix.maestro }}.zip"
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-junit-${{ matrix.platform }}-${{ matrix.maestro }}
+          path: bundles/*.zip
+          retention-days: 7
+
+  contract:
+    name: Artifact contract
+    needs: [plan, legs, junit]
+    # Runs even when a leg failed: a leg that failed on "version not found" tells us
+    # about the fleet, and the bundles that DID land still tell us about the contract.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download every bundle
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bundle-*
+          path: bundles
+          merge-multiple: true
+
+      - name: Unpack
+        run: |
+          set -euo pipefail
+          mkdir -p unpacked
+          shopt -s nullglob
+          found=false
+          for zip in bundles/*.zip; do
+            found=true
+            name=$(basename "$zip" .zip)
+            mkdir -p "unpacked/$name"
+            unzip -qq -o "$zip" -d "unpacked/$name"
+          done
+          if [ "$found" = false ]; then
+            echo "::error::No artifact bundles at all - every device leg failed before producing one"
+            exit 1
+          fi
+          for d in unpacked/*/; do
+            echo "--- $(basename "$d")"
+            (cd "$d" && find . -type f | sed 's|^\./||' | sort | head -50)
+          done
+
+      - name: Assert the bundle invariants
+        run: |
+          set -uo pipefail
+          # These hold for every Maestro version. They are separate from the diff below
+          # because a version could match the baseline's shape exactly and still be
+          # broken - an empty testResult.txt has the right name and the wrong content.
+          fail=0
+          for d in unpacked/*/; do
+            name=$(basename "$d")
+            echo "::group::$name"
+
+            logs=$(find "$d" -type f -name '*-maestro.log' | wc -l)
+            results=$(find "$d" -type f -name '*-test-result.txt' | wc -l)
+            commands=$(find "$d" -type f -name '*-commands*.json' | wc -l)
+            screenshots=$(find "$d" -type f -name '*.png' | wc -l)
+
+            # Exactly one session log per flow. "Found multiple maestro log files" is a
+            # real failure we have hit - the glob that locates the log throws on more
+            # than one - and it is asserted per flow rather than as a fixed total so
+            # adding a flow to the contract workspace does not break the check.
+            if [ "$logs" -eq 0 ]; then
+              echo "::error::$name: no *-maestro.log in the bundle"
+              fail=1
+            fi
+            dupes=$(find "$d" -type f -name '*-maestro.log' -printf '%f\n' | sort | uniq -d)
+            if [ -n "$dupes" ]; then
+              echo "::error::$name: more than one maestro.log for the same flow:"
+              echo "$dupes" | sed 's|^|    |'
+              fail=1
+            fi
+
+            if [ "$results" -eq 0 ]; then
+              echo "::error::$name: no *-test-result.txt in the bundle"
+              fail=1
+            fi
+
+            # THE important one. If the parser stops recognising the log format it
+            # accepts zero lines, testResult.txt is written empty, and the run is
+            # reported to the customer as FAILED with an empty step log. Nothing else
+            # here would notice: the file exists and has the right name.
+            while IFS= read -r f; do
+              if [ ! -s "$f" ]; then
+                echo "::error::$name: $(basename "$f") is EMPTY - the log parser accepted no lines (EMPTY_TEST_RESULT_LOG)"
+                fail=1
+              fi
+            done < <(find "$d" -type f -name '*-test-result.txt')
+
+            if [ "$commands" -eq 0 ]; then
+              echo "::error::$name: no commands.json - Maestro moved it, or stopped writing it"
+              fail=1
+            fi
+
+            # The failing flow must leave a failure frame behind.
+            if [ "$screenshots" -eq 0 ]; then
+              echo "::error::$name: no screenshots in the bundle"
+              fail=1
+            fi
+
+            if [[ "$name" == bundle-junit-* ]]; then
+              xml=$(find "$d" -type f -name '*-report.xml' | head -1)
+              if [ -z "$xml" ]; then
+                echo "::error::$name: --report junit produced no *-report.xml"
+                fail=1
+              else
+                # The API merges these by regex, so the shape matters, not just presence.
+                grep -q '<testcase' "$xml" || { echo "::error::$name: report.xml has no <testcase"; fail=1; }
+                grep -q 'tests="' "$xml" || { echo "::error::$name: report.xml has no tests=\"N\" on the suite"; fail=1; }
+              fi
+            fi
+
+            echo "logs=$logs results=$results commands=$commands screenshots=$screenshots"
+            echo "::endgroup::"
+          done
+          exit $fail
+
+      - name: Diff the bundle shape against the baseline
+        env:
+          VERSION: ${{ inputs.version }}
+          BASELINE: ${{ needs.plan.outputs.baseline }}
+        run: |
+          set -uo pipefail
+          # This is the SOP's "diff the debug-output tree against the current version",
+          # done automatically and against a bundle produced in the same run rather than
+          # against a remembered shape that would go stale the first time we changed
+          # anything ourselves.
+          #
+          # Only files DISAPPEARING is an error. Maestro 2.7.0 broke us by MOVING things
+          # - the bundle was still full, the pieces were somewhere else. A new file that
+          # the previous version did not produce is additive and harmless.
+          fail=0
+          normalise() {
+            # Strip what legitimately differs between two runs of the same flows:
+            # timestamps, uuids, per-run ids and the version string itself. What is left
+            # is the shape of the bundle.
+            find "$1" -type f | sed "s|^$1/||" \
+              | sed -E 's/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/UUID/g' \
+              | sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2}[T_ ][0-9:.-]+/TIMESTAMP/g' \
+              | sed -E 's/[0-9]+/N/g' \
+              | sort -u
+          }
+          shopt -s nullglob
+          for under in unpacked/*-under-test/; do
+            base="${under%-under-test/}-baseline/"
+            name=$(basename "${under%/}" -under-test)
+            if [ ! -d "$base" ]; then
+              echo "::warning::$name: no baseline bundle to diff against (that leg did not produce one)"
+              continue
+            fi
+            normalise "${under%/}" > /tmp/under.txt
+            normalise "${base%/}" > /tmp/base.txt
+            missing=$(comm -23 /tmp/base.txt /tmp/under.txt)
+            added=$(comm -13 /tmp/base.txt /tmp/under.txt)
+            echo "::group::$name  $BASELINE -> $VERSION"
+            if [ -n "$missing" ]; then
+              echo "::error::$name: files the baseline produced and $VERSION did not:"
+              echo "$missing" | sed 's|^|    - |'
+              fail=1
+            fi
+            if [ -n "$added" ]; then
+              echo "New in $VERSION (additive, not a failure):"
+              echo "$added" | sed 's|^|    + |'
+            fi
+            [ -z "$missing$added" ] && echo "identical bundle shape"
+            echo "::endgroup::"
+          done
+          exit $fail
+
+  gate:
+    name: Gate
+    needs: [resolve, plan, legs, junit, contract, sweep-android, sweep-ios]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verdict
+        env:
+          LEGS: ${{ needs.legs.result }}
+          JUNIT: ${{ needs.junit.result }}
+          CONTRACT: ${{ needs.contract.result }}
+          RESOLVE: ${{ needs.resolve.result }}
+          PLAN: ${{ needs.plan.result }}
+          SWEEP_ANDROID: ${{ needs.sweep-android.result }}
+          SWEEP_IOS: ${{ needs.sweep-ios.result }}
+        run: |
+          set -uo pipefail
+          pass=true
+          row() {
+            printf '| %s | %s |\n' "$1" "$2" >> "$GITHUB_STEP_SUMMARY"
+            [ "$2" = "success" ] || pass=false
+          }
+          {
+            echo "### Maestro ${{ inputs.version }} on ${{ needs.resolve.outputs.environment }}"
+            echo
+            echo "Artifact bundles diffed against **${{ needs.plan.outputs.baseline }}**."
+            echo
+            echo "| Stage | Result |"
+            echo "| --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          row "Resolve supported versions" "$RESOLVE"
+          row "Plan" "$PLAN"
+          row "Device legs (cpu1, gpu1, m1, Play, iOS default, iOS m4)" "$LEGS"
+          row "junit report path" "$JUNIT"
+          row "Artifact contract" "$CONTRACT"
+          row "Regression sweep - Android, every supported version" "$SWEEP_ANDROID"
+          row "Regression sweep - iOS, every supported version" "$SWEEP_IOS"
+          if [ "$pass" = true ]; then
+            echo "Maestro ${{ inputs.version }} passed validation on ${{ needs.resolve.outputs.environment }}"
+          else
+            echo "::error::Maestro ${{ inputs.version }} did NOT pass validation on ${{ needs.resolve.outputs.environment }}"
+            exit 1
+          fi
+
+  sweep-android:
+    name: Regression sweep (Android)
+    needs: plan
+    # Every supported version, not just the new one. A Maestro release can change how
+    # an OLDER version's output is produced or parsed on the same host, and a sweep that
+    # only covered the new version would miss it - which is the whole reason the nightly
+    # matrices exist. Running them here makes that part of the release gate rather than
+    # something remembered two days later.
+    uses: ./.github/workflows/android-maestro-version-matrix.yml
+    with:
+      environment: ${{ inputs.environment }}
+    secrets: inherit
+
+  sweep-ios:
+    name: Regression sweep (iOS)
+    needs: plan
+    uses: ./.github/workflows/ios-maestro-version-matrix.yml
+    with:
+      environment: ${{ inputs.environment }}
+    secrets: inherit

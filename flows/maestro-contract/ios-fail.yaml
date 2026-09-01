@@ -1,0 +1,9 @@
+# See android-fail.yaml — same shape, same reasoning.
+appId: org.wikimedia.wikipedia
+tags:
+  - ios
+  - maestro-contract
+---
+- runFlow: subflows/onboarding-ios.yaml
+- runScript: scripts/pick-query.js
+- assertVisible: "ZZZ_MAESTRO_CONTRACT_NEGATIVE_ASSERTION_ZZZ"
