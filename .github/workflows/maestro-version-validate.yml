@@ -178,7 +178,10 @@ jobs:
           workspace: ./flows/maestro-contract
           include-tags: ${{ matrix.leg.platform }}
           maestro-version: ${{ steps.v.outputs.version }}
-          runner-type: ${{ matrix.leg.runner-type }}
+          # Bracket syntax for the hyphenated keys, matching the three below it. Dotted
+          # access would work too - `steps.get-build-number.outputs.build-number` is used
+          # all over infra - this is only for consistency within the block.
+          runner-type: ${{ matrix.leg['runner-type'] }}
           google-play: ${{ matrix.leg['google-play'] }}
           android-device: ${{ matrix.leg['android-device'] }}
           android-api-level: ${{ matrix.leg['android-api-level'] }}
@@ -406,7 +409,9 @@ jobs:
               fail=1
             fi
 
-            if [[ "$name" == bundle-junit-* ]]; then
+            # `merge-multiple` flattens the uploads, so a bundle is named after the ZIP
+            # (junit-android-under-test), not after the artifact (bundle-junit-...).
+            if [[ "$name" == junit-* ]]; then
               xml=$(find "$d" -type f -name '*-report.xml' | head -1)
               if [ -z "$xml" ]; then
                 echo "::error::$name: --report junit produced no *-report.xml"
