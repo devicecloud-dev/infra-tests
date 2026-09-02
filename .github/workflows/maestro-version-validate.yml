@@ -234,8 +234,12 @@ jobs:
           fi
           echo "$FLOW_RESULTS" | jq .
 
-          pass=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-pass$"))] | .[0].status // "MISSING"')
-          fail=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-fail$"))] | .[0].status // "MISSING"')
+          # Flows are reported by workspace-relative PATH with extension
+          # ("./android-pass.yaml"), not by a bare name - so the suffix match has to
+          # include it. Anchoring on "-pass$" matched nothing, and every leg reported
+          # MISSING while the device runs had in fact been correct.
+          pass=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-pass[.]ya?ml$"))] | .[0].status // "MISSING"')
+          fail=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-fail[.]ya?ml$"))] | .[0].status // "MISSING"')
 
           ok=true
           [ "$pass" = "PASSED" ] || { echo "::error::the passing flow reported $pass"; ok=false; }
@@ -321,8 +325,8 @@ jobs:
             exit 1
           fi
           echo "$FLOW_RESULTS" | jq .
-          pass=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-pass$"))] | .[0].status // "MISSING"')
-          fail=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-fail$"))] | .[0].status // "MISSING"')
+          pass=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-pass[.]ya?ml$"))] | .[0].status // "MISSING"')
+          fail=$(echo "$FLOW_RESULTS" | jq -r '[.[] | select(.name | test("-fail[.]ya?ml$"))] | .[0].status // "MISSING"')
           ok=true
           [ "$pass" = "PASSED" ] || { echo "::error::junit: the passing flow reported $pass"; ok=false; }
           [ "$fail" = "FAILED" ] || { echo "::error::junit: the deliberately failing flow reported $fail"; ok=false; }
