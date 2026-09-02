@@ -251,6 +251,11 @@ jobs:
           echo "pass flow PASSED and fail flow FAILED, as expected"
 
       - name: Keep the artifact bundle
+        # always(): a leg that fails its assertions is exactly when the bundle is
+        # worth having. Without this the evidence is destroyed by the failure that
+        # made you want it - which is what happened when the flow-name matcher was
+        # wrong: twelve legs failed and the contract job then had nothing to check.
+        if: always()
         run: |
           set -euo pipefail
           if [ ! -f artifacts.zip ]; then
@@ -263,6 +268,7 @@ jobs:
           ls -la bundles
 
       - name: Upload the bundle
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: bundle-${{ matrix.leg.key }}-${{ matrix.maestro }}
@@ -333,6 +339,11 @@ jobs:
           $ok
 
       - name: Keep the artifact bundle
+        # always(): a leg that fails its assertions is exactly when the bundle is
+        # worth having. Without this the evidence is destroyed by the failure that
+        # made you want it - which is what happened when the flow-name matcher was
+        # wrong: twelve legs failed and the contract job then had nothing to check.
+        if: always()
         run: |
           set -euo pipefail
           if [ ! -f artifacts.zip ]; then
@@ -344,6 +355,7 @@ jobs:
           mv artifacts.zip "bundles/junit-${{ matrix.platform }}-${{ matrix.maestro }}.zip"
 
       - name: Upload the bundle
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: bundle-junit-${{ matrix.platform }}-${{ matrix.maestro }}
