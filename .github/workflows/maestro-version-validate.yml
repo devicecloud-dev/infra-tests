@@ -92,6 +92,15 @@ jobs:
           ENVIRONMENT: ${{ needs.resolve.outputs.environment }}
         run: |
           set -euo pipefail
+          # Shape first. The membership check below is the real gate - an injected string
+          # cannot be in the API's list - but `gate` runs with `if: always()`, so it sees
+          # this input even when this job rejects it. Everything downstream reads the
+          # version through an `env:` var for that reason; this just fails it early and
+          # legibly.
+          echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' || {
+            echo "::error::'$VERSION' is not a bare x.y.z version"
+            exit 1
+          }
           if ! echo "$SUPPORTED" | jq -e --arg v "$VERSION" 'index($v)' >/dev/null; then
             echo "::error::$ENVIRONMENT does not support Maestro $VERSION yet. Supported: $(echo "$SUPPORTED" | jq -r 'join(" ")')"
             echo "The API gate has to be live before the devices can be validated - the CLI"
@@ -271,12 +280,15 @@ jobs:
 
       - name: Which version this cell runs
         id: v
+        env:
+          UNDER_TEST: ${{ inputs.version }}
+          BASELINE: ${{ needs.plan.outputs.baseline }}
         run: |
           set -euo pipefail
           if [ "${{ matrix.maestro }}" = "baseline" ]; then
-            echo "version=${{ needs.plan.outputs.baseline }}" >> "$GITHUB_OUTPUT"
+            echo "version=$BASELINE" >> "$GITHUB_OUTPUT"
           else
-            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "version=$UNDER_TEST" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run the contract flows with a junit report
@@ -516,6 +528,11 @@ jobs:
           PLAN: ${{ needs.plan.result }}
           SWEEP_ANDROID: ${{ needs.sweep-android.result }}
           SWEEP_IOS: ${{ needs.sweep-ios.result }}
+          # Through env because this job runs with `if: always()` - it sees the raw
+          # dispatch input even when `plan` rejected it as malformed.
+          VERSION: ${{ inputs.version }}
+          ENVIRONMENT: ${{ needs.resolve.outputs.environment }}
+          BASELINE: ${{ needs.plan.outputs.baseline }}
         run: |
           set -uo pipefail
           pass=true
@@ -524,9 +541,9 @@ jobs:
             [ "$2" = "success" ] || pass=false
           }
           {
-            echo "### Maestro ${{ inputs.version }} on ${{ needs.resolve.outputs.environment }}"
+            echo "### Maestro $VERSION on $ENVIRONMENT"
             echo
-            echo "Artifact bundles diffed against **${{ needs.plan.outputs.baseline }}**."
+            echo "Artifact bundles diffed against **$BASELINE**."
             echo
             echo "| Stage | Result |"
             echo "| --- | --- |"
@@ -539,9 +556,9 @@ jobs:
           row "Regression sweep - Android, every supported version" "$SWEEP_ANDROID"
           row "Regression sweep - iOS, every supported version" "$SWEEP_IOS"
           if [ "$pass" = true ]; then
-            echo "Maestro ${{ inputs.version }} passed validation on ${{ needs.resolve.outputs.environment }}"
+            echo "Maestro $VERSION passed validation on $ENVIRONMENT"
           else
-            echo "::error::Maestro ${{ inputs.version }} did NOT pass validation on ${{ needs.resolve.outputs.environment }}"
+            echo "::error::Maestro $VERSION did NOT pass validation on $ENVIRONMENT"
             exit 1
           fi
 
