@@ -414,7 +414,11 @@ jobs:
             logs=$(find "$d" -type f -name '*-maestro.log' | wc -l)
             results=$(find "$d" -type f -name '*-test-result.txt' | wc -l)
             commands=$(find "$d" -type f -name '*-commands*.json' | wc -l)
-            screenshots=$(find "$d" -type f -name '*.png' | wc -l)
+            # The failure frame specifically, and .jpg not .png: screenshots became
+            # JPEG when the compression path was fixed (dcd#1347). A bare *.png count
+            # matched nothing and reported 0 for every bundle including the baseline,
+            # which is how a wrong assertion looks exactly like a broken platform.
+            screenshots=$(find "$d" -type f -name '*failure-screenshot.*' | wc -l)
 
             # Exactly one session log per flow. "Found multiple maestro log files" is a
             # real failure we have hit - the glob that locates the log throws on more
@@ -452,9 +456,12 @@ jobs:
               fail=1
             fi
 
-            # The failing flow must leave a failure frame behind.
+            # The failing flow must leave its failure frame behind - that image is what
+            # a customer opens first, and a version that stopped producing it would
+            # otherwise look fine here.
             if [ "$screenshots" -eq 0 ]; then
-              echo "::error::$name: no screenshots in the bundle"
+              echo "::error::$name: no *failure-screenshot.* in the bundle"
+              find "$d" -type f | sed "s|^|    |" | head -20
               fail=1
             fi
 
@@ -478,6 +485,10 @@ jobs:
           exit $fail
 
       - name: Diff the bundle shape against the baseline
+        # Independent of the invariants above, and the more informative of the two -
+        # a failed invariant used to skip it, so the one check that answers "what did
+        # this version stop producing" never ran.
+        if: always()
         env:
           VERSION: ${{ inputs.version }}
           BASELINE: ${{ needs.plan.outputs.baseline }}
