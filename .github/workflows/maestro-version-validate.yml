@@ -525,7 +525,21 @@ jobs:
             normalise "${base%/}" > /tmp/base.txt
             missing=$(comm -23 /tmp/base.txt /tmp/under.txt)
             added=$(comm -13 /tmp/base.txt /tmp/under.txt)
+
+            # Recordings are best-effort in the bundle, not part of the contract.
+            # Video encode moved off the critical path (dcd#872), so one may or may not
+            # have landed by the time artifacts are collected - measured on 2.9.0,
+            # junit-ios LOST a recording the 2.8.0 baseline had while android-play GAINED
+            # one, in the same run. Opposite directions is nondeterminism, not a
+            # regression, and failing on it would make this check cry wolf every time.
+            # Reported, never fatal; everything else stays strict.
+            missing_video=$(echo "$missing" | grep -E 'recording|/videos/' || true)
+            missing=$(echo "$missing" | grep -vE 'recording|/videos/' || true)
             echo "::group::$name  $BASELINE -> $VERSION"
+            if [ -n "${missing_video// /}" ]; then
+              echo "Recordings that differ (best-effort, not the contract):"
+              echo "$missing_video" | sed 's|^|    ~ |'
+            fi
             if [ -n "$missing" ]; then
               echo "::error::$name: files the baseline produced and $VERSION did not:"
               echo "$missing" | sed 's|^|    - |'
@@ -535,7 +549,7 @@ jobs:
               echo "New in $VERSION (additive, not a failure):"
               echo "$added" | sed 's|^|    + |'
             fi
-            [ -z "$missing$added" ] && echo "identical bundle shape"
+            [ -z "$missing$added$missing_video" ] && echo "identical bundle shape"
             echo "::endgroup::"
           done
           exit $fail
