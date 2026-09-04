@@ -273,7 +273,10 @@ jobs:
         with:
           name: bundle-${{ matrix.leg.key }}-${{ matrix.maestro }}
           path: bundles/*.zip
-          retention-days: 7
+          # 1 day, the GitHub minimum. These exist only so the contract job can read
+          # bundles produced by the leg jobs minutes earlier in the SAME run - nothing
+          # reads them afterwards, and artifact storage is billed per GB-day.
+          retention-days: 1
 
   junit:
     name: junit ${{ matrix.platform }} - Maestro ${{ inputs.version }}
@@ -360,7 +363,10 @@ jobs:
         with:
           name: bundle-junit-${{ matrix.platform }}-${{ matrix.maestro }}
           path: bundles/*.zip
-          retention-days: 7
+          # 1 day, the GitHub minimum. These exist only so the contract job can read
+          # bundles produced by the leg jobs minutes earlier in the SAME run - nothing
+          # reads them afterwards, and artifact storage is billed per GB-day.
+          retention-days: 1
 
   contract:
     name: Artifact contract
