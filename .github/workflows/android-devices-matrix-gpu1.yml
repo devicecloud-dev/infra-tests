@@ -31,33 +31,39 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Pixel 6 API 34-36
+          # Pixel 6 API 34-37
           - device: pixel-6
             api-level: "34"
           - device: pixel-6
             api-level: "35"
           - device: pixel-6
             api-level: "36"
+          - device: pixel-6
+            api-level: "37"
 
           # Pixel 6 Pro API 35
           - device: pixel-6-pro
             api-level: "35"
 
-          # Pixel 7 API 34-36
+          # Pixel 7 API 34-37
           - device: pixel-7
             api-level: "34"
           - device: pixel-7
             api-level: "35"
           - device: pixel-7
             api-level: "36"
+          - device: pixel-7
+            api-level: "37"
 
-          # Pixel 7 Pro API 34-36
+          # Pixel 7 Pro API 34-37
           - device: pixel-7-pro
             api-level: "34"
           - device: pixel-7-pro
             api-level: "35"
           - device: pixel-7-pro
             api-level: "36"
+          - device: pixel-7-pro
+            api-level: "37"
 
 
     steps:
