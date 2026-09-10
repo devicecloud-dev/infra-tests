@@ -23,8 +23,42 @@ on:
 
 jobs:
   test-android-devices:
-    name: pixel-7 - API 34
+    name: ${{ matrix.device }} - API ${{ matrix.api-level }}
     runs-on: ubuntu-latest
+
+    strategy:
+      # Do not cancel all jobs if one fails
+      fail-fast: false
+      # Mirrors the Mac AVD matrix (infra ansible/ios/android-update.ansible.yml,
+      # REQUIRED_ANDROID_AVDS in dcd): API 34+ only on the Macs, no tablet.
+      matrix:
+        include:
+          - device: pixel-6
+            api-level: "34"
+          - device: pixel-6
+            api-level: "35"
+          - device: pixel-6
+            api-level: "36"
+          - device: pixel-6
+            api-level: "37"
+          - device: pixel-6-pro
+            api-level: "35"
+          - device: pixel-7
+            api-level: "34"
+          - device: pixel-7
+            api-level: "35"
+          - device: pixel-7
+            api-level: "36"
+          - device: pixel-7
+            api-level: "37"
+          - device: pixel-7-pro
+            api-level: "34"
+          - device: pixel-7-pro
+            api-level: "35"
+          - device: pixel-7-pro
+            api-level: "36"
+          - device: pixel-7-pro
+            api-level: "37"
 
     steps:
       - uses: actions/checkout@v3
@@ -36,9 +70,9 @@ jobs:
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
           app-file: ./binaries/sample.apk
           workspace: ./flows/android-flow.yaml
-          android-device: pixel-7
-          android-api-level: "34"
+          android-device: ${{ matrix.device }}
+          android-api-level: ${{ matrix.api-level }}
           runner-type: m1
           use-beta: ${{ github.event.inputs.use-beta }}
           retry: 1
-          name: "pixel-7 - Android API 34 Test Run [m1]"
+          name: "${{ matrix.device }} - Android API ${{ matrix.api-level }} Test Run [m1]"
