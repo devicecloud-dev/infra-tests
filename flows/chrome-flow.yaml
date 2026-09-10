@@ -3,7 +3,8 @@ appId: com.android.chrome
 - launchApp
 - waitForAnimationToEnd
 - assertVisible:
-    text: ".*(Search or type URL|Search or type web address).*"
+    # Chrome on the API 37 image says "Search Google or type URL".
+    text: ".*(Search or type URL|Search or type web address|Search Google or type URL).*"
 - tapOn:
     text: "Got it"
     optional: true
