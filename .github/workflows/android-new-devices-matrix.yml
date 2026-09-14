@@ -1,0 +1,102 @@
+name: Test New Android Devices [cpu1 + gpu1]
+
+# Validation matrix for the devices added by the Sept 2026 support policy:
+# Pixel 8, the Pixel 10 family, Pixel 11, and the tablet at API 37.
+#
+# Dispatch-only on purpose. `github.event.inputs.environment` is empty on a
+# `schedule` event, so a scheduled run would silently fall through to the prod
+# branch of the api-key/api-url expressions below and test devices that are not
+# on prod yet. Give this a `schedule:` block only once the images are promoted.
+#
+# `use-beta` must be true until the CLI release carrying these device slugs is
+# on the `latest` npm tag — the published CLI validates --android-device
+# client-side, so an older build rejects `pixel-10` before any request is made.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - dev
+          - prod
+        default: "dev"
+        required: true
+      use-beta:
+        description: "Use beta version (required until the device slugs ship in a stable CLI)"
+        type: boolean
+        default: true
+        required: false
+      runner-type:
+        description: "Runner type to claim"
+        type: choice
+        options:
+          - cpu1
+          - gpu1
+        default: "cpu1"
+        required: true
+
+jobs:
+  test-new-android-devices:
+    name: ${{ matrix.device }} - API ${{ matrix.api-level }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Don't cancel all jobs if one fails
+      fail-fast: false
+      matrix:
+        include:
+          # Pixel 8 shipped on Android 14 with a 7-year update window
+          - device: pixel-8
+            api-level: "34"
+          - device: pixel-8
+            api-level: "35"
+          - device: pixel-8
+            api-level: "36"
+          - device: pixel-8
+            api-level: "37"
+          # Pixel 10 family shipped on Android 16
+          - device: pixel-10
+            api-level: "36"
+          - device: pixel-10
+            api-level: "37"
+          - device: pixel-10-pro
+            api-level: "36"
+          - device: pixel-10-pro
+            api-level: "37"
+          - device: pixel-10-pro-xl
+            api-level: "36"
+          - device: pixel-10-pro-xl
+            api-level: "37"
+          - device: pixel-10-pro-fold
+            api-level: "36"
+          - device: pixel-10-pro-fold
+            api-level: "37"
+          # Pixel 11 shipped on Android 17
+          - device: pixel-11
+            api-level: "37"
+          # Tablet gains API 37 ("latest and latest-1"); 33 and 36 stay covered
+          # by android-devices-matrix-cpu1.yml
+          - device: generic-tablet
+            api-level: "37"
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # The GPU build matrix carries no tablet, so there is no
+      # dev-13-5in-freeform-api-37-gpu image to claim — the run would be accepted
+      # and then sit PENDING rather than fail.
+      - name: Run Android Device Tests
+        if: ${{ !(matrix.device == 'generic-tablet' && github.event.inputs.runner-type == 'gpu1') }}
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-flow.yaml
+          android-device: ${{ matrix.device }}
+          android-api-level: ${{ matrix.api-level }}
+          runner-type: ${{ github.event.inputs.runner-type }}
+          use-beta: ${{ github.event.inputs.use-beta }}
+          retry: 1
+          name: "${{ matrix.device }} - Android API ${{ matrix.api-level }} Test Run"
