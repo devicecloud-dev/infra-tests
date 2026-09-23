@@ -1,0 +1,5 @@
+appId: dev.devicecloud.smoke
+---
+- launchApp
+- assertVisible: "DeviceCloud Smoke Test"
+- assertVisible: "Device ready"

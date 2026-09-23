@@ -69,22 +69,29 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set Flow File and App Binary
-        id: set-flow-file
-        run: |
-          if [[ "${{ matrix.device }}" == "iphone-16-pro" || "${{ matrix.device }}" == "iphone-16-pro-max" || "${{ matrix.device }}" == "ipad-pro-6th-gen" ]]; then
-            echo "flow-file=./flows/ios-flow-simple.yaml" >> $GITHUB_OUTPUT
-          else
-            echo "flow-file=./flows/ios-flow.yaml" >> $GITHUB_OUTPUT
-          fi
-
+      # binaries/dcdsmoke.zip replaced the Wikipedia build on 2026-09-23. That
+      # build is x86_64-only, and iOS 26.5 and 27.0 refuse to install it
+      # ("Failed to find matching arch"), so every cell on a current runtime
+      # failed. dcdsmoke is a 9KB native SwiftUI app built for arm64 with a
+      # 17.0 deployment target, so it installs on every version we support —
+      # and SwiftUI's scene-based lifecycle means it cannot hit the iOS 27
+      # UIScene termination that the Expo fixture does.
+      #
+      # It is also app-file rather than app-binary-id, matching
+      # ios-maestro-version-matrix.yml: a pinned id is eventually purged by
+      # retention, and one fixture per environment is one more thing to keep
+      # in step. Source lives in fixtures/ios-smoke/.
+      #
+      # One flow for every device now. The old split existed because the
+      # Wikipedia walkthrough asserted a layout that differed on Pro and iPad
+      # screens; the smoke app renders identically everywhere.
       - name: Run iOS Device Tests
         uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
           api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
-          app-binary-id: ${{ github.event.inputs.environment == 'dev' && '299a3fc8-8024-4c5e-93fd-ee2512b227ca' || 'c5c8c570-d2c5-440c-9183-f39c09999d8d' }}
-          workspace: ${{ steps.set-flow-file.outputs.flow-file }}
+          app-file: ./binaries/dcdsmoke.zip
+          workspace: ./flows/ios-smoke.yaml
           ios-device: ${{ matrix.device }}
           ios-version: ${{ matrix.ios-version }}
           use-beta: ${{ github.event.inputs.use-beta }}

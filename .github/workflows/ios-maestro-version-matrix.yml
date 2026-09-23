@@ -73,8 +73,10 @@ jobs:
           # app-binary-id pinned two hashes that retention eventually purges, and when
           # that happened EVERY cell failed with "Binary not found" - which reads as a
           # Maestro regression and is not one. An upload per run is immune to it.
-          app-file: ./binaries/sample.zip
-          workspace: ./flows/ios-flow-simple.yaml
+          # sample.zip is the same x86_64-only Wikipedia build as
+          # wikipedia-pre26.zip, which iOS 26.5 and 27.0 refuse to install.
+          app-file: ./binaries/dcdsmoke.zip
+          workspace: ./flows/ios-smoke.yaml
           maestro-version: ${{ matrix.maestro-version }}
           use-beta: ${{ inputs.use-beta }}
           name: "iOS - Maestro ${{ matrix.maestro-version }} Test Run"
