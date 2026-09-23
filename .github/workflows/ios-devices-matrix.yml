@@ -46,25 +46,64 @@ jobs:
             ios-version: "18"
           - device: iphone-16
             ios-version: "26"
+          - device: iphone-16
+            ios-version: "27"
 
           - device: iphone-16-plus
             ios-version: "26"
+          - device: iphone-16-plus
+            ios-version: "27"
 
           - device: iphone-16-pro
             ios-version: "18"
           - device: iphone-16-pro
             ios-version: "26"
+          - device: iphone-16-pro
+            ios-version: "27"
 
           - device: iphone-16-pro-max
             ios-version: "18"
           - device: iphone-16-pro-max
             ios-version: "26"
           
-          # iPad Pro (iOS 18, 26)
+          - device: iphone-16-pro-max
+            ios-version: "27"
+
+          # iPhone 17 and iPhone Air (iOS 26, 27). Both refuse 17.5 and 18.6 —
+          # minRuntimeVersion 26.0 in the simulator device profile.
+          - device: iphone-17
+            ios-version: "26"
+          - device: iphone-17
+            ios-version: "27"
+
+          - device: iphone-air
+            ios-version: "26"
+          - device: iphone-air
+            ios-version: "27"
+
+          # iPhone 18 Pro (iOS 27 only — minRuntimeVersion 27.0)
+          - device: iphone-18-pro
+            ios-version: "27"
+          - device: iphone-18-pro-max
+            ios-version: "27"
+
+          # iPad Pro (iOS 18, 26, 27)
           - device: ipad-pro-6th-gen
             ios-version: "18"
           - device: ipad-pro-6th-gen
             ios-version: "26"
+          - device: ipad-pro-6th-gen
+            ios-version: "27"
+
+          # iPad Pro M5 (iOS 26, 27)
+          - device: ipad-pro-m5-11
+            ios-version: "26"
+          - device: ipad-pro-m5-11
+            ios-version: "27"
+          - device: ipad-pro-m5-13
+            ios-version: "26"
+          - device: ipad-pro-m5-13
+            ios-version: "27"
 
     steps:
       - uses: actions/checkout@v3
