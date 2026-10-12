@@ -1,0 +1,32 @@
+# Every file the contract flows deliberately produce, by name. maestro-version-validate.yml
+# requires each pattern to match in EVERY bundle: the version under test and its baseline,
+# on every leg.
+#
+# This is the fixed, known-good reference the bundle diff cannot be. The diff compares a
+# version with the one before it, so a loss that predates the diff is invisible to it:
+# Maestro 2.7.0 moved takeScreenshot output, the 2.8.0 baseline already lacked it, and
+# 2.9.0, 2.10.0 and 2.11.0 each diffed "identical bundle shape" while every named
+# screenshot was missing. A pattern here depends on no earlier version being right.
+#
+# Patterns are `find -path` globs under the unpacked zip, whose layout is
+# <resultId>/<logs|screenshots|videos>/<flow>-<name> (`*` also matches `/`). Videos are
+# not listed: they are best-effort in the bundle (see the diff step). Changing a line here
+# changes the contract, so say why in the commit.
+
+# Each flow's own logs.
+*/logs/*-pass-maestro.log
+*/logs/*-fail-maestro.log
+*/logs/*-pass-test-result.txt
+*/logs/*-fail-test-result.txt
+*/logs/*-pass-commands*.json
+*/logs/*-fail-commands*.json
+
+# The failure frame: the image a customer opens first.
+*/screenshots/*-fail-failure-screenshot.*
+
+# takeScreenshot output, flat, nested and on a failing flow. Nested paths only survive
+# from Maestro 2.7.0 (and the dcd fix for it); on 2.6.1 and older a nested path never
+# reached the bundle, so a baseline that old fails this line by design.
+*/screenshots/*-pass-contract-*-pass.*
+*/screenshots/*-pass-nested-contract-*-pass-nested.*
+*/screenshots/*-fail-contract-*-fail-before.*
