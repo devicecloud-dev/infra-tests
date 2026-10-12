@@ -15,4 +15,8 @@ tags:
       - tapOn: "Search Wikipedia"
       - inputText: ${output.result}
       - assertVisible: ${output.result}
+# Named screenshots, flat and nested. Maestro 2.7.0 moved where these land and the
+# platform dropped every one for five releases; required-artifacts.txt asserts both
+# by name.
 - takeScreenshot: contract-android-pass
+- takeScreenshot: nested/contract-android-pass-nested

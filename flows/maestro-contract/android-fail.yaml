@@ -11,4 +11,7 @@ tags:
 ---
 - runFlow: subflows/onboarding-android.yaml
 - runScript: scripts/pick-query.js
+# A named screenshot on a failing flow: the failure-screenshot picker globs the same
+# folders, and must not take this one for the failure frame.
+- takeScreenshot: contract-android-fail-before
 - assertVisible: "ZZZ_MAESTRO_CONTRACT_NEGATIVE_ASSERTION_ZZZ"

@@ -23,6 +23,13 @@ name: Validate a Maestro version
 # the artifact bundle is checked - both against invariants that must always hold and
 # against the SAME flows on the previous version, which is the diff the SOP asks for
 # by hand.
+#
+# The diff alone is not enough: it can only see what the version under test lost
+# relative to one that was already supported. 2.7.0 moved takeScreenshot output before
+# this gate existed, so every baseline since lacked it and 2.9.0-2.11.0 all diffed
+# clean. The invariants therefore include flows/maestro-contract/required-artifacts.txt,
+# every file the contract flows produce, by name - a reference no earlier version has
+# to have got right.
 
 on:
   workflow_call:
@@ -413,36 +420,42 @@ jobs:
           # because a version could match the baseline's shape exactly and still be
           # broken - an empty testResult.txt has the right name and the wrong content.
           fail=0
+          # Every file the contract flows produce, by name - the fixed known-good
+          # reference the diff below cannot be (see the file for why). Presence lives
+          # there; what presence cannot show (duplicates, empty files, report shape)
+          # stays here.
+          required=$(grep -vE '^[[:space:]]*(#|$)' flows/maestro-contract/required-artifacts.txt)
+          total=$(grep -c . <<< "$required")
           for d in unpacked/*/; do
             name=$(basename "$d")
+            root="${d%/}"
             echo "::group::$name"
 
-            logs=$(find "$d" -type f -name '*-maestro.log' | wc -l)
-            results=$(find "$d" -type f -name '*-test-result.txt' | wc -l)
-            commands=$(find "$d" -type f -name '*-commands*.json' | wc -l)
-            # The failure frame specifically, and .jpg not .png: screenshots became
-            # JPEG when the compression path was fixed (dcd#1347). A bare *.png count
-            # matched nothing and reported 0 for every bundle including the baseline,
-            # which is how a wrong assertion looks exactly like a broken platform.
-            screenshots=$(find "$d" -type f -name '*failure-screenshot.*' | wc -l)
+            # Patterns are matched whole against the path under the bundle root, so
+            # .jpg vs .png (dcd#1347 made screenshots JPEG) is the file's business,
+            # not a count that silently matches nothing.
+            matched=0
+            while IFS= read -r pattern; do
+              if [ -n "$(find "$root" -type f -path "$root/$pattern" -print -quit)" ]; then
+                matched=$((matched + 1))
+              else
+                echo "::error::$name: nothing matches $pattern (flows/maestro-contract/required-artifacts.txt)"
+                fail=1
+              fi
+            done <<< "$required"
+            if [ "$matched" -lt "$total" ]; then
+              echo "    the bundle holds:"
+              find "$root" -type f | sed "s|^$root/|      |" | sort | head -40
+            fi
 
             # Exactly one session log per flow. "Found multiple maestro log files" is a
             # real failure we have hit - the glob that locates the log throws on more
             # than one - and it is asserted per flow rather than as a fixed total so
             # adding a flow to the contract workspace does not break the check.
-            if [ "$logs" -eq 0 ]; then
-              echo "::error::$name: no *-maestro.log in the bundle"
-              fail=1
-            fi
             dupes=$(find "$d" -type f -name '*-maestro.log' -printf '%f\n' | sort | uniq -d)
             if [ -n "$dupes" ]; then
               echo "::error::$name: more than one maestro.log for the same flow:"
               echo "$dupes" | sed 's|^|    |'
-              fail=1
-            fi
-
-            if [ "$results" -eq 0 ]; then
-              echo "::error::$name: no *-test-result.txt in the bundle"
               fail=1
             fi
 
@@ -456,20 +469,6 @@ jobs:
                 fail=1
               fi
             done < <(find "$d" -type f -name '*-test-result.txt')
-
-            if [ "$commands" -eq 0 ]; then
-              echo "::error::$name: no commands.json - Maestro moved it, or stopped writing it"
-              fail=1
-            fi
-
-            # The failing flow must leave its failure frame behind - that image is what
-            # a customer opens first, and a version that stopped producing it would
-            # otherwise look fine here.
-            if [ "$screenshots" -eq 0 ]; then
-              echo "::error::$name: no *failure-screenshot.* in the bundle"
-              find "$d" -type f | sed "s|^|    |" | head -20
-              fail=1
-            fi
 
             # `merge-multiple` flattens the uploads, so a bundle is named after the ZIP
             # (junit-android-under-test), not after the artifact (bundle-junit-...).
@@ -485,7 +484,7 @@ jobs:
               fi
             fi
 
-            echo "logs=$logs results=$results commands=$commands screenshots=$screenshots"
+            echo "required artifacts: $matched/$total"
             echo "::endgroup::"
           done
           exit $fail
