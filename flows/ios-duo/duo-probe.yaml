@@ -1,0 +1,25 @@
+# The iPhone Duo probe (fixtures/ios-duo-probe). This flow doesn't depend on
+# posture. It checks launch, a tap on each corner, text input and a named
+# screenshot. Those are what break first when Maestro drives the wrong display
+# of a foldable.
+appId: dev.devicecloud.duoprobe
+---
+- launchApp
+- assertVisible: "DCD Duo Probe"
+- tapOn:
+    id: "corner_tl"
+- assertVisible: "Last tap: TL"
+- tapOn:
+    id: "corner_tr"
+- assertVisible: "Last tap: TR"
+- tapOn:
+    id: "corner_bl"
+- assertVisible: "Last tap: BL"
+- tapOn:
+    id: "corner_br"
+- assertVisible: "Last tap: BR"
+- tapOn:
+    id: "duo_input"
+- inputText: "duo"
+- assertVisible: "Echo: duo"
+- takeScreenshot: duo-probe
