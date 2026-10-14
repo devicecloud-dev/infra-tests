@@ -1,0 +1,12 @@
+# Unfold first, then the stock smoke assertions on the inner panel. The video
+# should show the cover segment, a short freeze, then the inner segment.
+appId: dev.devicecloud.smoke
+tags:
+  - smoke-app
+---
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"open"}' } }
+- assertTrue: ${output.dcd.display == 'LCD-1'}
+- launchApp
+- assertVisible: "DeviceCloud Smoke Test"
+- assertVisible: "Device ready"
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"open-smoke"}' } }

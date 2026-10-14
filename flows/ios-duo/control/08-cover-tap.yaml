@@ -1,0 +1,15 @@
+# A server tap on the cover screen while folded (rot0, the panel Maestro
+# itself can drive), as the single-panel counterpart of 03. On the 466x678-
+# point cover the probe's window is 382x644 (the status-bar ear takes the
+# right edge): TL sits at (30, 30) and BR at (352, 614), from its screenshot.
+appId: dev.devicecloud.duoprobe
+tags:
+  - probe-app
+  - recheck
+---
+- launchApp
+- assertVisible: "Screen 466x678.*"
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":30,"y":30}' } }
+- assertVisible: "Last tap: TL"
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":352,"y":614}' } }
+- assertVisible: "Last tap: BR"

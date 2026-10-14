@@ -1,0 +1,27 @@
+# Taps through the control server land on the inner panel's corner buttons
+# (stock Maestro cannot tap there), then fold back and let Maestro tap.
+# Coordinates are interface points measured from the open-panel screenshot
+# of the probe (951x669 screen, window inset by the status-bar ear).
+appId: dev.devicecloud.duoprobe
+tags:
+  - probe-app
+---
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"open"}' } }
+- launchApp
+- assertVisible: "Screen 951x669.*"
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":30,"y":30}' } }
+- assertVisible: "Last tap: TL"
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":836,"y":30}' } }
+- assertVisible: "Last tap: TR"
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":30,"y":604}' } }
+- assertVisible: "Last tap: BL"
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":836,"y":604}' } }
+- assertVisible: "Last tap: BR"
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"after-unfold"}' } }
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"closed"}' } }
+- assertVisible: "Screen 466x678.*"
+# A different corner from the server's last tap, so this proves Maestro's own tap.
+- tapOn:
+    id: "corner_tl"
+- assertVisible: "Last tap: TL"
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"after-refold"}' } }

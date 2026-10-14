@@ -1,0 +1,7 @@
+# No control calls at all: a Duo run must look exactly as it did before.
+appId: dev.devicecloud.smoke
+tags:
+  - smoke-app
+---
+- launchApp
+- assertVisible: "DeviceCloud Smoke Test"

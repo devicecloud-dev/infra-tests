@@ -1,0 +1,9 @@
+# Is the control server reachable from Maestro's JavaScript at all?
+appId: dev.devicecloud.smoke
+tags:
+  - smoke-app
+---
+- launchApp
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.platform == 'ios'}
+- assertTrue: ${output.dcd.activeDisplay.name == 'LCD'}
