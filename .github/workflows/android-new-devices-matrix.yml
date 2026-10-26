@@ -75,8 +75,8 @@ jobs:
           # Pixel 11 shipped on Android 17
           - device: pixel-11
             api-level: "37"
-          # Tablet gains API 37 ("latest and latest-1"); 33 and 36 stay covered
-          # by android-devices-matrix-cpu1.yml
+          # Tablet gains API 37 ("latest and latest-1"); 36 stays covered by
+          # android-devices-matrix-cpu1.yml
           - device: generic-tablet
             api-level: "37"
 
