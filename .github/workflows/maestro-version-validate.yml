@@ -138,6 +138,8 @@ jobs:
           # keeps its own copy of the binaries. A version can land on one and miss
           # another, so each is exercised separately. Google Play is pinned to
           # pixel-7 / API 34 because that matrix is deliberately sparse - do not widen it.
+          # Google Play on m1 (dcd#1620) is its own leg: the Macs hold their own arm64
+          # Play AVDs, and Play moves there from cpu1 on 14 December 2026.
           #
           # `envs` is which environments actually have hardware for that leg, and it is
           # load-bearing rather than tidiness. The m1 Android runner and the whole m4
@@ -152,6 +154,7 @@ jobs:
             {"key": "android-gpu1", "platform": "android", "runner-type": "gpu1", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
             {"key": "android-m1", "platform": "android", "runner-type": "m1", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["prod"]},
             {"key": "android-play", "platform": "android", "runner-type": "default", "google-play": "true", "android-device": "pixel-7", "android-api-level": "34", "envs": ["dev", "prod"]},
+            {"key": "android-m1-play", "platform": "android", "runner-type": "m1", "google-play": "true", "android-device": "pixel-10", "android-api-level": "36", "envs": ["prod"]},
             {"key": "ios-default", "platform": "ios", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
             {"key": "ios-m4", "platform": "ios", "runner-type": "m4", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["prod"]}
           ]
