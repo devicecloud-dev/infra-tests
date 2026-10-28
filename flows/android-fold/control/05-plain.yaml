@@ -1,0 +1,8 @@
+# No control calls: a fold run the server leaves unchanged (one recording part).
+appId: org.wikipedia
+tags:
+  - fold
+---
+- launchApp
+- tapOn: "Skip"
+- assertVisible: "Search Wikipedia"

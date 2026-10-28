@@ -1,0 +1,12 @@
+# The server refuses bad requests with a status the flow can see, and the
+# device is left usable afterwards.
+appId: dev.devicecloud.smoke
+tags:
+  - smoke-app
+---
+- launchApp
+- runScript: { file: expect-error.js, env: { CMD: posture, ARGS: '{"posture":"flat"}', EXPECT_STATUS: "400" } }
+- runScript: { file: expect-error.js, env: { CMD: tap, ARGS: '{"x":5000,"y":5000}', EXPECT_STATUS: "422" } }
+- runScript: { file: expect-error.js, env: { CMD: screenshot, ARGS: '{"name":"../x"}', EXPECT_STATUS: "400" } }
+- runScript: { file: expect-error.js, env: { CMD: fold, ARGS: '{}', EXPECT_STATUS: "404" } }
+- assertVisible: "DeviceCloud Smoke Test"

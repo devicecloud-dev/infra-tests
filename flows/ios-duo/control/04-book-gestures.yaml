@@ -1,0 +1,15 @@
+# Book posture (hinge at 127°), then a swipe and a long press on the inner
+# panel, with the probe's text field as the target.
+appId: dev.devicecloud.duoprobe
+tags:
+  - probe-app
+---
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"book"}' } }
+- launchApp
+- assertVisible: "Size H:regular V:regular"
+- runScript: { file: dcd.js, env: { CMD: longPress, ARGS: '{"x":475,"y":334,"ms":600}' } }
+- runScript: { file: dcd.js, env: { CMD: swipe, ARGS: '{"x1":700,"y1":334,"x2":250,"y2":334,"ms":400}' } }
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"book"}' } }
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.posture == 'book'}
+- assertTrue: ${output.dcd.segments == 2}

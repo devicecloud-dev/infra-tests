@@ -1,0 +1,9 @@
+# Bad requests come back as the status the step reports, not as an infra crash.
+appId: org.wikipedia
+tags:
+  - fold
+---
+- launchApp
+- runScript: { file: expect-error.js, env: { CMD: posture, ARGS: '{"posture":"book"}', EXPECT_STATUS: "400" } }
+- runScript: { file: expect-error.js, env: { CMD: tap, ARGS: '{"x":5000,"y":5000}', EXPECT_STATUS: "422" } }
+- runScript: { file: expect-error.js, env: { CMD: screenshot, ARGS: '{"name":"bad name!"}', EXPECT_STATUS: "400" } }

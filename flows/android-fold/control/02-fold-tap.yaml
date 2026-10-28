@@ -1,0 +1,23 @@
+# Fold to the cover, let the server tap SKIP where it sits on the cover
+# (uiautomator: [0,2188][215,2305] of 1080x2364), then unfold. A screenshot of
+# each panel, and the recording cut once per panel switch (3 parts).
+appId: org.wikipedia
+tags:
+  - fold
+---
+- launchApp
+- assertVisible: "Skip"
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"closed"}' } }
+- assertTrue: ${output.dcd.display == 'cover'}
+- assertVisible: "Skip"
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"folded"}' } }
+- assertTrue: ${output.dcd.width == 1080 && output.dcd.height == 2364}
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":107,"y":2246}' } }
+- assertVisible: "Search Wikipedia"
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"open"}' } }
+- assertTrue: ${output.dcd.display == 'inner'}
+- assertVisible: "Search Wikipedia"
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"open"}' } }
+- assertTrue: ${output.dcd.width == 2076 && output.dcd.height == 2152}
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.posture == 'open' && output.dcd.segments == 3}

@@ -1,0 +1,22 @@
+# Any iOS device can opt in. Tap and screenshot work on a single screen;
+# a posture is refused because the device is not foldable. The tap is the
+# TL button of the probe on an iPhone 18 Pro (402x874 points, window below
+# the 62-point status bar), measured from its screenshot.
+appId: dev.devicecloud.duoprobe
+env:
+  DEVICECLOUD_OVERRIDE_DEVICE_CONTROL: "true"
+  DEVICECLOUD_OVERRIDE_IOS_DEVICE: iphone-18-pro
+tags:
+  - probe-app
+  - recheck
+---
+- launchApp
+# Wait for the UI before tapping: a server tap is not a Maestro command, so
+# nothing else waits for the app to be up (a tap 1 s after launch was lost).
+- assertVisible: "Screen 402x874.*"
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.postures.length == 0}
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":30,"y":92}' } }
+- assertVisible: "Last tap: TL"
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"single"}' } }
+- runScript: { file: expect-error.js, env: { CMD: posture, ARGS: '{"posture":"open"}', EXPECT_STATUS: "422" } }

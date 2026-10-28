@@ -1,0 +1,24 @@
+# Stock Maestro keeps working on the cover after a fold (the server dismisses
+# the keyguard the fold raises), then half-open and open keep the inner panel.
+# The long press and swipe land mid-screen on the inner panel (2076x2152).
+appId: org.wikipedia
+tags:
+  - fold
+---
+- launchApp
+- assertVisible: "Skip"
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"closed"}' } }
+- tapOn: "Skip"
+- assertVisible: "Search Wikipedia"
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"half"}' } }
+- assertTrue: ${output.dcd.display == 'inner'}
+- assertVisible: "Search Wikipedia"
+- runScript: { file: dcd.js, env: { CMD: longPress, ARGS: '{"x":1038,"y":1076,"ms":600}' } }
+- runScript: { file: dcd.js, env: { CMD: swipe, ARGS: '{"x1":1500,"y1":1076,"x2":500,"y2":1076,"ms":300}' } }
+- runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"open"}' } }
+- assertTrue: ${output.dcd.display == 'inner'}
+- assertVisible: "Search Wikipedia"
+# Parts: the start, the cut at closed (cover) and the cut at half (inner again);
+# half to open stays on the inner panel and cuts nothing.
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.segments == 3}

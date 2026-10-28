@@ -1,0 +1,12 @@
+# The control server is reachable from the flow on the Pixel 10 Pro Fold and
+# reports the unfolded inner panel, in pixels.
+appId: org.wikipedia
+tags:
+  - fold
+---
+- launchApp
+- assertVisible: "Skip"
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.platform == 'android'}
+- assertTrue: ${output.dcd.postures.length == 3}
+- assertTrue: ${output.dcd.screen.width == 2076 && output.dcd.screen.height == 2152}
