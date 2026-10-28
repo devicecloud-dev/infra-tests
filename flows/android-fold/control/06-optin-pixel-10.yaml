@@ -1,0 +1,30 @@
+# The opt-in on an Android device that does not fold: with
+# DEVICECLOUD_OVERRIDE_DEVICE_CONTROL a Pixel 10 run gets the server too.
+# state reports no postures, screenshot and the gestures work in pixels on
+# the one screen (1080x2424), and a posture is refused as 422. The server
+# tap lands on Skip, bottom-left of Wikipedia's onboarding, which the
+# assertion after it proves. Coordinates are literal on purpose: Maestro's
+# ${...} substitution ends at the last brace of the env value, so an
+# expression inside the JSON body breaks it.
+appId: org.wikipedia
+env:
+  DEVICECLOUD_OVERRIDE_DEVICE_CONTROL: "true"
+tags:
+  - optin
+---
+- launchApp
+- assertVisible: "Skip"
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.platform == 'android'}
+- assertTrue: ${output.dcd.postures.length == 0 && output.dcd.posture == null}
+- assertTrue: ${output.dcd.screen.width == 1080 && output.dcd.screen.height == 2424}
+- runScript: { file: dcd.js, env: { CMD: screenshot, ARGS: '{"name":"onboarding"}' } }
+- assertTrue: ${output.dcd.width == 1080 && output.dcd.height == 2424}
+- runScript: { file: expect-error.js, env: { CMD: posture, ARGS: '{"posture":"closed"}', EXPECT_STATUS: "422" } }
+- runScript: { file: dcd.js, env: { CMD: tap, ARGS: '{"x":107,"y":2304}' } }
+- assertVisible: "Search Wikipedia"
+- runScript: { file: dcd.js, env: { CMD: longPress, ARGS: '{"x":540,"y":1200,"ms":500}' } }
+- runScript: { file: dcd.js, env: { CMD: swipe, ARGS: '{"x1":800,"y1":1200,"x2":300,"y2":1200,"ms":300}' } }
+- assertVisible: "Search Wikipedia"
+- runScript: { file: dcd.js, env: { CMD: state } }
+- assertTrue: ${output.dcd.segments == 1}

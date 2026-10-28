@@ -1,5 +1,5 @@
 // Calls the run's device-control server (DCD_CONTROL_URL, set by DeviceCloud
-// for iPhone Duo runs). Use from a flow as:
+// for foldable runs and for flows that opt in). Use from a flow as:
 //
 //   - runScript: { file: dcd.js, env: { CMD: posture, ARGS: '{"posture":"open"}' } }
 //

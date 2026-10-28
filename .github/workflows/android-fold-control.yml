@@ -1,0 +1,66 @@
+name: Test Android fold control
+
+# The device-control server on Android: a Pixel 10 Pro Fold run gets
+# DCD_CONTROL_URL, and a flow's JavaScript folds, unfolds, taps, swipes and
+# screenshots through it (docs.devicecloud.dev/configuration/foldable-devices).
+# The flows under flows/android-fold/control cover each command, the error
+# statuses, a plain fold run with no control calls, and the opt-in on a
+# Pixel 10, which does not fold. The app is Wikipedia (binaries/sample.apk).
+#
+# Dispatch-only on purpose, like ios-duo-control.yml: the fold is in the
+# nightly Android matrices, and the control flows are for proving the
+# server after a runner change.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  test-android-fold-control:
+    name: ${{ matrix.device }} flows
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The fold: state, a fold with server taps on the cover, stock
+          # Maestro after a fold, the error statuses, a plain run.
+          - device: pixel-10-pro-fold
+            api-level: "37"
+            tags: fold
+          # A device that does not fold, opted in from the flow's env block.
+          - device: pixel-10
+            api-level: "36"
+            tags: optin
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # The whole folder is the workspace, so dcd.js and expect-error.js travel
+      # with the flows; include-tags picks the flows written for this device.
+      - name: Run Android fold control flows
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ./binaries/sample.apk
+          workspace: ./flows/android-fold/control
+          include-tags: ${{ matrix.tags }}
+          android-device: ${{ matrix.device }}
+          android-api-level: ${{ matrix.api-level }}
+          use-beta: ${{ github.event.inputs.use-beta }}
+          name: "Android fold control - ${{ matrix.device }}"
+          retry: 1
