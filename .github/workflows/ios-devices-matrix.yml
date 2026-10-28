@@ -87,10 +87,9 @@ jobs:
           - device: iphone-18-pro-max
             ios-version: "27"
 
-          # iPhone Duo (iOS 27 only, and only on a host with Xcode 27.1:
-          # minRuntimeVersion 27.1). DO NOT MERGE before the production
-          # rollout. dcd serves the device behind a dev-only gate, so on prod
-          # this cell fails validation with "not supported".
+          # iPhone Duo (iOS 27 only: minRuntimeVersion 27.1, which every
+          # production Mac has carried since 2026-10-27). It starts folded; the
+          # device-control flows run in ios-duo-control.yml.
           - device: iphone-duo
             ios-version: "27"
 

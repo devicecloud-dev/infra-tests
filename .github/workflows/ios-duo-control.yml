@@ -1,0 +1,65 @@
+name: Test iPhone Duo control
+
+# The device-control server: a foldable run gets DCD_CONTROL_URL, and a flow's
+# JavaScript folds, unfolds, taps, swipes and screenshots through it
+# (docs.devicecloud.dev/configuration/foldable-devices). The flows under
+# flows/ios-duo/control cover each command, the error statuses, the opt-in on
+# a single-screen iPhone and a plain Duo run with no control calls.
+#
+# Dispatch-only on purpose: the Duo cell in ios-devices-matrix.yml already
+# proves the device every two days, and these flows take two uploads (the
+# smoke app and the Duo probe), which is more than a nightly needs.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to run tests against"
+        type: choice
+        options:
+          - prod
+          - dev
+        default: "prod"
+        required: true
+      use-beta:
+        description: "Use beta version"
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  test-ios-duo-control:
+    name: ${{ matrix.app }} flows
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # dcdsmoke (fixtures/ios-smoke): state, unfold then the smoke
+          # assertions on the inner screen, the error statuses, a plain run.
+          - app: smoke-app
+            app-file: ./binaries/dcdsmoke.zip
+          # The Duo probe (fixtures/ios-duo-probe): server taps on the inner
+          # screen's corners, book-posture gestures, the single-screen opt-in
+          # (that flow names an iPhone 18 Pro itself) and a cover-screen tap.
+          - app: probe-app
+            app-file: ./binaries/dcdduoprobe.zip
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # The whole folder is the workspace, so dcd.js and expect-error.js travel
+      # with the flows; include-tags picks the flows written for this app.
+      - name: Run iPhone Duo control flows
+        uses: devicecloud-dev/device-cloud-for-maestro@v2
+        with:
+          api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}
+          api-url: ${{ github.event.inputs.environment == 'dev' && 'https://api.dev.devicecloud.dev' || '' }}
+          app-file: ${{ matrix.app-file }}
+          workspace: ./flows/ios-duo/control
+          include-tags: ${{ matrix.app }}
+          ios-device: iphone-duo
+          ios-version: "27"
+          use-beta: ${{ github.event.inputs.use-beta }}
+          name: "iPhone Duo control - ${{ matrix.app }}"
+          retry: 1
