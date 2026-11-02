@@ -148,15 +148,23 @@ jobs:
           # then sit PENDING for ever, because no host advertises what it asks for and
           # nothing reaps a stale PENDING - so it would hang the release rather than fail
           # it.
+          #
+          # The iOS legs are pinned to iphone-16 / iOS 18. They run binaries/sample.zip,
+          # the x86_64-only Wikipedia build, which iOS 26.5 and 27 refuse to install
+          # ("Failed to find matching arch") - and the default target became iPhone 16 /
+          # iOS 26 on 2 November 2026. "default" in ios-default is the runner type, as in
+          # android-cpu1; the default device target itself is covered by
+          # ios-maestro-version-matrix.yml (sweep-ios below), which runs the arm64
+          # dcdsmoke fixture with no device flags.
           cat > all-legs.json <<'JSON'
           [
-            {"key": "android-cpu1", "platform": "android", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
-            {"key": "android-gpu1", "platform": "android", "runner-type": "gpu1", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
-            {"key": "android-m1", "platform": "android", "runner-type": "m1", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["prod"]},
-            {"key": "android-play", "platform": "android", "runner-type": "default", "google-play": "true", "android-device": "pixel-7", "android-api-level": "34", "envs": ["dev", "prod"]},
-            {"key": "android-m1-play", "platform": "android", "runner-type": "m1", "google-play": "true", "android-device": "pixel-10", "android-api-level": "36", "envs": ["prod"]},
-            {"key": "ios-default", "platform": "ios", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["dev", "prod"]},
-            {"key": "ios-m4", "platform": "ios", "runner-type": "m4", "google-play": "", "android-device": "", "android-api-level": "", "envs": ["prod"]}
+            {"key": "android-cpu1", "platform": "android", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "", "ios-version": "", "envs": ["dev", "prod"]},
+            {"key": "android-gpu1", "platform": "android", "runner-type": "gpu1", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "", "ios-version": "", "envs": ["dev", "prod"]},
+            {"key": "android-m1", "platform": "android", "runner-type": "m1", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "", "ios-version": "", "envs": ["prod"]},
+            {"key": "android-play", "platform": "android", "runner-type": "default", "google-play": "true", "android-device": "pixel-7", "android-api-level": "34", "ios-device": "", "ios-version": "", "envs": ["dev", "prod"]},
+            {"key": "android-m1-play", "platform": "android", "runner-type": "m1", "google-play": "true", "android-device": "pixel-10", "android-api-level": "36", "ios-device": "", "ios-version": "", "envs": ["prod"]},
+            {"key": "ios-default", "platform": "ios", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "iphone-16", "ios-version": "18", "envs": ["dev", "prod"]},
+            {"key": "ios-m4", "platform": "ios", "runner-type": "m4", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "iphone-16", "ios-version": "18", "envs": ["prod"]}
           ]
           JSON
           jq -c --arg env "$ENVIRONMENT" '[.[] | select(.envs | index($env)) | del(.envs)]' all-legs.json > legs.json
@@ -217,13 +225,15 @@ jobs:
           workspace: ./flows/maestro-contract
           include-tags: ${{ matrix.leg.platform }}
           maestro-version: ${{ steps.v.outputs.version }}
-          # Bracket syntax for the hyphenated keys, matching the three below it. Dotted
+          # Bracket syntax for the hyphenated keys, matching the others below it. Dotted
           # access would work too - `steps.get-build-number.outputs.build-number` is used
           # all over infra - this is only for consistency within the block.
           runner-type: ${{ matrix.leg['runner-type'] }}
           google-play: ${{ matrix.leg['google-play'] }}
           android-device: ${{ matrix.leg['android-device'] }}
           android-api-level: ${{ matrix.leg['android-api-level'] }}
+          ios-device: ${{ matrix.leg['ios-device'] }}
+          ios-version: ${{ matrix.leg['ios-version'] }}
           download-artifacts: ALL
           name: "contract ${{ matrix.leg.key }} - Maestro ${{ steps.v.outputs.version }}"
 
@@ -298,6 +308,13 @@ jobs:
       matrix:
         platform: [android, ios]
         maestro: ["under-test", "baseline"]
+        # The iOS cell runs sample.zip too, so it is pinned like the iOS legs (see
+        # the comment above all-legs.json). Android cells get no ios-* keys, which
+        # the action reads as "not passed".
+        include:
+          - platform: ios
+            ios-device: iphone-16
+            ios-version: "18"
     steps:
       - uses: actions/checkout@v3
 
@@ -329,6 +346,8 @@ jobs:
           workspace: ./flows/maestro-contract
           include-tags: ${{ matrix.platform }}
           maestro-version: ${{ steps.v.outputs.version }}
+          ios-device: ${{ matrix['ios-device'] }}
+          ios-version: ${{ matrix['ios-version'] }}
           report: junit
           download-artifacts: ALL
           name: "contract junit ${{ matrix.platform }} - Maestro ${{ steps.v.outputs.version }}"
