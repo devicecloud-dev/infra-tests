@@ -35,10 +35,10 @@ zip -qry ../../binaries/dcdsmoke.zip dcdsmoke.app
 `-parse-as-library` is required: a lone `.swift` file is treated as script mode
 and `@main` is then rejected.
 
-The deployment target is 17.0. Since iOS 17 was removed on 2 November 2026 the
-oldest runtime we hold is 18, and a 17.0 build still installs there, so there
-is no need to raise it. Raise it only if the fixture stops installing on the
-oldest cell.
+The deployment target is 17.0, the oldest runtime we hold (17.5). iOS 17 is
+deprecated, with removal targeted for 9 November 2026 (subject to usage). A
+17.0 build also installs on 18 and later, so there is no need to raise it when
+17 goes. Raise it only if the fixture stops installing on the oldest cell.
 
 Verified on iPhone 15/17, iPhone 14/18, iPhone 16/26, iPhone 18 Pro/27 and
 iPad Pro 13-inch M5/27 — all passing, 3-6s each.
