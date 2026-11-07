@@ -1,4 +1,4 @@
-name: Test New Android Devices [cpu1 + gpu1]
+name: Test New Android Devices [cpu1]
 
 # Validation matrix for the devices added by the Sept 2026 support policy:
 # Pixel 8, the Pixel 10 family, Pixel 11, and the tablet at API 37.
@@ -27,12 +27,13 @@ on:
         type: boolean
         default: true
         required: false
+      # gpu1 was an option here until it was removed on 9 November 2026: the
+      # API now runs a gpu1 request on cpu1.
       runner-type:
         description: "Runner type to claim"
         type: choice
         options:
           - cpu1
-          - gpu1
         default: "cpu1"
         required: true
 
@@ -83,11 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # The GPU build matrix carries no tablet, so there is no
-      # dev-13-5in-freeform-api-37-gpu image to claim — the run would be accepted
-      # and then sit PENDING rather than fail.
       - name: Run Android Device Tests
-        if: ${{ !(matrix.device == 'generic-tablet' && github.event.inputs.runner-type == 'gpu1') }}
         uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
           api-key: ${{ github.event.inputs.environment == 'dev' && secrets.DCD_DEV_API_KEY || secrets.DCD_API_KEY }}

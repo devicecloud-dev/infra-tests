@@ -5,8 +5,8 @@ name: Validate a Maestro version
 # What the existing sweeps do NOT cover, and why this exists:
 #
 #   - They run one Android runner type (the default, cpu1 -> the STANDARD emulator
-#     image) and one Mac rack. gpu1 and m1 use different images and different hosts,
-#     and a version can be present on one and missing on another, which surfaces to a
+#     image) and one Mac rack. m1 uses different images on a different host, and a
+#     version can be present on one and missing on another, which surfaces to a
 #     customer as "maestro version X not found" long after CI went green.
 #   - They run only the `-simple` flows and only passing ones. That proves the binary
 #     boots. It does not prove the artifact contract still holds - and that contract is
@@ -133,10 +133,12 @@ jobs:
           echo "baseline=$baseline" >> "$GITHUB_OUTPUT"
           echo "Validating $VERSION against $ENVIRONMENT, diffing artifacts against $baseline"
 
-          # The legs. Android runner types are NOT interchangeable: `default` (cpu1) and
-          # `gpu1` run different emulator images, and `m1` is a single arm64 Mac that
-          # keeps its own copy of the binaries. A version can land on one and miss
-          # another, so each is exercised separately. Google Play is pinned to
+          # The legs. Android runner types are NOT interchangeable: `default` (cpu1) runs
+          # the STANDARD emulator image on the k8s rack, and `m1` is a single arm64 Mac
+          # that keeps its own copy of the binaries. A version can land on one and miss
+          # the other, so each is exercised separately. There is no gpu1 leg: the gpu1
+          # runner type was removed on 9 November 2026 and the API runs a gpu1 request
+          # on cpu1, so the leg would only repeat android-cpu1. Google Play is pinned to
           # pixel-7 / API 34 because that matrix is deliberately sparse - do not widen it.
           # Google Play on m1 (dcd#1620) is its own leg: the Macs hold their own arm64
           # Play AVDs, and Play moves there from cpu1 on 14 December 2026.
@@ -159,7 +161,6 @@ jobs:
           cat > all-legs.json <<'JSON'
           [
             {"key": "android-cpu1", "platform": "android", "runner-type": "default", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "", "ios-version": "", "envs": ["dev", "prod"]},
-            {"key": "android-gpu1", "platform": "android", "runner-type": "gpu1", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "", "ios-version": "", "envs": ["dev", "prod"]},
             {"key": "android-m1", "platform": "android", "runner-type": "m1", "google-play": "", "android-device": "", "android-api-level": "", "ios-device": "", "ios-version": "", "envs": ["prod"]},
             {"key": "android-play", "platform": "android", "runner-type": "default", "google-play": "true", "android-device": "pixel-7", "android-api-level": "34", "ios-device": "", "ios-version": "", "envs": ["dev", "prod"]},
             {"key": "android-m1-play", "platform": "android", "runner-type": "m1", "google-play": "true", "android-device": "pixel-10", "android-api-level": "36", "ios-device": "", "ios-version": "", "envs": ["prod"]},
@@ -618,7 +619,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           row "Resolve supported versions" "$RESOLVE"
           row "Plan" "$PLAN"
-          row "Device legs (cpu1, gpu1, m1, Play, iOS default, iOS m4)" "$LEGS"
+          row "Device legs (cpu1, m1, Play, iOS default, iOS m4)" "$LEGS"
           row "junit report path" "$JUNIT"
           row "Artifact contract" "$CONTRACT"
           row "Regression sweep - Android, every supported version" "$SWEEP_ANDROID"

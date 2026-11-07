@@ -8,8 +8,6 @@ A suite of automated tests that runs nightly to verify that DeviceCloud is worki
 
 [![Test Android Devices - cpu1](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-devices-matrix-cpu1.yml/badge.svg)](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-devices-matrix-cpu1.yml)
 
-[![Test Android Devices - gpu1](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-devices-matrix-gpu1.yml/badge.svg)](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-devices-matrix-gpu1.yml)
-
 [![Test Android Devices - m1](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-devices-matrix-m1.yml/badge.svg)](https://github.com/devicecloud-dev/infra-tests/actions/workflows/android-devices-matrix-m1.yml)
 
 
