@@ -36,7 +36,7 @@ zip -qry ../../binaries/dcdsmoke.zip dcdsmoke.app
 and `@main` is then rejected.
 
 The deployment target is 17.0, the oldest runtime we hold (17.5). iOS 17 is
-deprecated, with removal targeted for 9 November 2026 (subject to usage). A
+deprecated, with removal targeted for 23 November 2026 (subject to usage). A
 17.0 build also installs on 18 and later, so there is no need to raise it when
 17 goes. Raise it only if the fixture stops installing on the oldest cell.
 
