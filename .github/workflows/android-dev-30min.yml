@@ -24,7 +24,7 @@ jobs:
         uses: devicecloud-dev/device-cloud-for-maestro@v2
         with:
           api-key: ${{ secrets.DCD_DEV_API_KEY }}
-          api-url: https://api.dev.devicecloud.dev
+          api-url: https://dev-api.devicecloud.dev
           app-file: ./binaries/sample.apk
           workspace: ./flows/android-flow.yaml
           android-device: pixel-6
