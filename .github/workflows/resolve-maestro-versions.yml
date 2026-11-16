@@ -60,7 +60,7 @@ jobs:
         run: |
           set -euo pipefail
           case "${REQUESTED:-}" in
-            dev) env=dev; url=https://api.dev.devicecloud.dev ;;
+            dev) env=dev; url=https://dev-api.devicecloud.dev ;;
             prod|"") env=prod; url=https://api.devicecloud.dev ;;
             *) echo "::error::Unknown environment '${REQUESTED}' (expected prod or dev)"; exit 1 ;;
           esac
