@@ -31,10 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # iPhone 14 (iOS 17-18). iOS 17 is deprecated: removal is targeted
-          # for 23 November 2026, subject to usage.
-          - device: iphone-14
-            ios-version: "17"
+          # iPhone 14 (iOS 18 only). iOS 17 was removed on 24 November 2026.
           - device: iphone-14
             ios-version: "18"
 
@@ -56,7 +53,7 @@ jobs:
           - device: iphone-16-pro
             ios-version: "27"
 
-          # iPhone 17 and iPhone Air (iOS 26, 27). Both refuse 17.5 and 18.6 —
+          # iPhone 17 and iPhone Air (iOS 26, 27). Both refuse 18.6 —
           # minRuntimeVersion 26.0 in the simulator device profile.
           - device: iphone-17
             ios-version: "26"
